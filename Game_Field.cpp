@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <time.h>
 
+#include <random>
 
 //ステージの大きさ
 #define F_SIZE_X 2000
@@ -66,6 +67,7 @@ public:
 	int get_my();
 	int get_state();
 	int get_hit_info();
+	int get_jump_counter();
 
 };
 
@@ -92,18 +94,27 @@ void Player::set_coordinate() {
 void Player::change_state(int state) {
 	if(player_state == JUMP)
 		return;
+	if (player_state == state)
+		return;
+
 	switch (state) {
 	case STAND:
+		if (player_state == BEND)
+			coordinate_y -= 50;
 		player_state = STAND;
 		width = 50;
 		height = 100;
 		break;
 	case JUMP:
+		if (player_state == BEND)
+			coordinate_y -= 50;
 		player_state = JUMP;
 		width = 50;
 		height = 100;
 		break;
 	case BEND:
+		if (player_state != BEND)
+			coordinate_y += 50;
 		player_state = BEND;
 		width = 50;
 		height = 50;
@@ -132,14 +143,14 @@ void Player::hit_check() {
 		jump_counter = 0;
 		break;
 	case HIT_Y_DOWN:
+		if (player_state == JUMP)
+			return;
 		move_x = 0;
 		move_y = 0;
 		jump_counter = 20;
-		player_state = STAND;
 		break;
 	case HIT_X:
 		move_x = 5;
-		move_y = 0;
 		break;
 	case HIT_XY_UP:
 		move_x = 5;
@@ -150,14 +161,14 @@ void Player::hit_check() {
 		move_x = 5;
 		move_y = 0;
 		jump_counter = 20;
-		player_state = STAND;
+		//player_state = STAND;
 		break;
 	}
 
 }
 
 void Player::jump_process() {
-	if (player_state == 1) {
+	if (player_state == JUMP) {
 		if (jump_counter > 0) {
 			move_y = 5;
 			jump_counter -= 1;
@@ -199,13 +210,29 @@ int Player::get_state() {
 int Player::get_hit_info() {
 	return hit_info;
 }
+int Player::get_jump_counter() {
+	return jump_counter;
+}
 
 //ステージ生成
 cv::Mat Make_Field() {
 	cv::Mat field = cv::Mat::zeros(F_SIZE_Y, F_SIZE_X, CV_8UC3);
 
-	cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
+	
+
+	for (int x = 0; x <= F_SIZE_X-30; x += 30) {
+		std::random_device rand;
+		std::mt19937 mt(rand());
+		std::uniform_int_distribution<> rand255(0, 255);
+		std::cout << x << std::endl;
+		cv::rectangle(field, cv::Point(x, 0), cv::Point(x+30, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
+	}
+
+	//cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
+
 	cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(500, F_SIZE_Y - 120), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+
 
 	cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
 	cv::rectangle(field, cv::Point(200, 350), cv::Point(300, 450), cv::Scalar(200, 0, 0), -1, CV_AA);
@@ -233,12 +260,13 @@ int main(int argc, char* argv[]){
 	Player player;
 	player.initial_coordinate();
 
+	bool flag = false;
 
 	//ステージ描画
 	while (stride_count < F_SIZE_X - (F_SIZE_Y * 2)) {
 		clock_t current = clock();
 		
-		int key = cv::waitKey(5);
+		int key = cv::waitKey(1);
 		switch (key) {
 		case CV_WAITKEY_W:
 			player.change_state(JUMP);
@@ -250,13 +278,13 @@ int main(int argc, char* argv[]){
 			player.change_state(STAND);
 			break;
 		}
-
+		
 		if (time_manage(start, current)) {
 			//std::cout << player.get_x() << std::endl;
 			//std::cout << player.get_y() << std::endl;
 			//std::cout << player.get_w() << std::endl;
 			//std::cout << player.get_h() << std::endl;
-			std::cout <<  player.get_hit_info()<<", " << player.get_state()<< ", " << player.get_mx() << ", " << player.get_my() << std::endl;
+			//std::cout <<  player.get_hit_info()<<", " << player.get_state()<< ", " << player.get_w() << ", " << player.get_h()  << std::endl;
 
 			stride_count += 5;
 			cv::Mat test(img, cv::Rect(stride_count, 0, D_SIZE_X, D_SIZE_Y));
@@ -267,16 +295,19 @@ int main(int argc, char* argv[]){
 			int hit_field[int(D_SIZE_Y / 5)][int(D_SIZE_X / 5)];
 			for (int y = 0; y < int(D_SIZE_Y / 5); y++) {
 				for (int x = 0;x < int(D_SIZE_X / 5); x++) {
-					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255))
+					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
 						hit_field[y][x] = BLOCK;
-					else
+					}
+					else {
 						hit_field[y][x] = EMPTY;
+					}
 				}
+				std::cout << std::endl;
 			}
 
 			player.set_hit_info(NO_HIT);
 			for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
-				if (hit_field[y][(player.get_x() + player.get_w()) / 5] == BLOCK)
+				if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK)
 					player.set_hit_info(HIT_X);
 			}
 			for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
@@ -288,7 +319,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 			for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
-				if (hit_field[(player.get_y() + player.get_h()) / 5 + 1][x] == BLOCK) {
+				if (hit_field[(player.get_y() + player.get_h()) / 5][x] == BLOCK) {
 					if (player.get_hit_info() == HIT_X)
 						player.set_hit_info(HIT_XY_DOWN);
 					else
@@ -301,6 +332,26 @@ int main(int argc, char* argv[]){
 			cv::rectangle(display, cv::Point(player.get_x(), player.get_y()), 
 				cv::Point(player.get_x() + player.get_w(), player.get_y() + player.get_h()), cv::Scalar(255, 255, 255), -1, CV_AA);
 			cv::imshow("drawing", display);
+
+
+
+			if (flag == false) {
+				cv::waitKey(0);
+				flag = true;
+			}
+			for (int y = 0; y < int(D_SIZE_Y / 5); y++) {
+				for (int x = 0; x < int(D_SIZE_X / 5); x++) {
+					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
+						std::cout << "#";
+					}
+					else if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(255, 255, 255))
+						std::cout << "O";
+					else {
+						std::cout << " ";
+					}
+				}
+				std::cout << std::endl;
+			}
 			//cv::waitKey(5);
 			start = current;
 
