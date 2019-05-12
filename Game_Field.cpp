@@ -106,6 +106,8 @@ void Player::change_state(int state) {
 		height = 100;
 		break;
 	case JUMP:
+		if (hit_info != HIT_Y_DOWN && hit_info != HIT_XY_DOWN)
+			break;
 		if (player_state == BEND)
 			coordinate_y -= 50;
 		player_state = JUMP;
@@ -132,9 +134,9 @@ void Player::set_hit_info(int info) {
 void Player::hit_check() {
 	switch (hit_info) {
 	case NO_HIT:
+		move_x = 0;
 		if (player_state == JUMP)
 			return;
-		move_x = 0;
 		move_y = -5;
 		break;
 	case HIT_Y_UP:
@@ -159,12 +161,14 @@ void Player::hit_check() {
 		break;
 	case HIT_XY_DOWN:
 		move_x = 5;
-		move_y = 0;
-		jump_counter = 20;
+		if (player_state != JUMP) {
+			move_y = 0;
+			jump_counter = 20;
+		}
 		//player_state = STAND;
 		break;
 	}
-
+	return;
 }
 
 void Player::jump_process() {
@@ -246,7 +250,12 @@ bool time_manage(clock_t start, clock_t current) {
 }
 
 //“–‚½‚è”»’è
+int Collision_Detection(int player[], int block[]) {
+	//IoUŒvŽZ
 
+	return 0;
+
+}
 
 
 int main(int argc, char* argv[]){
@@ -302,19 +311,22 @@ int main(int argc, char* argv[]){
 						hit_field[y][x] = EMPTY;
 					}
 				}
-				std::cout << std::endl;
+				//std::cout << std::endl;
 			}
 
+			//int check_collision = Collision_Detection();
 			player.set_hit_info(NO_HIT);
 			for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
-				if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK)
+				if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK) {
+					//std::cout << y << ", " << int((player.get_x() + player.get_w()) / 5) << std::endl;
 					player.set_hit_info(HIT_X);
+				}
 			}
 			for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
 				if (hit_field[player.get_y() / 5][x] == BLOCK) {
 					if (player.get_hit_info() == HIT_X)
 						player.set_hit_info(HIT_XY_UP);
-					else
+					else if(player.get_hit_info() != HIT_XY_UP)
 						player.set_hit_info(HIT_Y_UP);
 				}
 			}
@@ -322,10 +334,12 @@ int main(int argc, char* argv[]){
 				if (hit_field[(player.get_y() + player.get_h()) / 5][x] == BLOCK) {
 					if (player.get_hit_info() == HIT_X)
 						player.set_hit_info(HIT_XY_DOWN);
-					else
+					else if(player.get_hit_info() != HIT_XY_DOWN)
 						player.set_hit_info(HIT_Y_DOWN);
 				}
 			}
+			std::cout << player.get_hit_info() << std::endl;
+
 			player.hit_check();
 			player.set_coordinate();
 
@@ -339,6 +353,7 @@ int main(int argc, char* argv[]){
 				cv::waitKey(0);
 				flag = true;
 			}
+			/*
 			for (int y = 0; y < int(D_SIZE_Y / 5); y++) {
 				for (int x = 0; x < int(D_SIZE_X / 5); x++) {
 					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
@@ -352,6 +367,7 @@ int main(int argc, char* argv[]){
 				}
 				std::cout << std::endl;
 			}
+			*/
 			//cv::waitKey(5);
 			start = current;
 
