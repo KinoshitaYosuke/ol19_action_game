@@ -5,7 +5,7 @@
 #include <random>
 
 //ステージの大きさ
-#define F_SIZE_X 2000
+#define F_SIZE_X 2500
 #define F_SIZE_Y 300
 #define D_SIZE_X 600
 #define D_SIZE_Y 300
@@ -219,25 +219,24 @@ int Player::get_jump_counter() {
 }
 
 //ステージ生成
-cv::Mat Make_Field() {
+cv::Mat Make_Field(int level) {
 	cv::Mat field = cv::Mat::zeros(F_SIZE_Y, F_SIZE_X, CV_8UC3);
-
-	
 
 	for (int x = 0; x <= F_SIZE_X-60; x += 60) {
 		std::random_device rand;
 		std::mt19937 mt(rand());
 		std::uniform_int_distribution<> rand255(0, 255);
 		std::cout << x << std::endl;
-		cv::rectangle(field, cv::Point(x, 0), cv::Point(x+30, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
+		cv::rectangle(field, cv::Point(x, 0), cv::Point(x+60, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
 	}
 
 	//cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
 
 	cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(500, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(800, 0), cv::Point(1000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(0, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(300, 0), cv::Point(800, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
 	cv::rectangle(field, cv::Point(1300, F_SIZE_Y - 120), cv::Point(2000, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(1600, 0), cv::Point(2000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
 
 
 	cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
@@ -261,7 +260,11 @@ int Collision_Detection(int player[], int block[]) {
 
 
 int main(int argc, char* argv[]){
-	cv::Mat img = Make_Field();
+	cv::Mat stage_0 = Make_Field(0);
+	cv::Mat stage_1 = Make_Field(1);
+	cv::Mat stage_2 = Make_Field(2);
+
+	cv::Mat img = stage_0;
 
 	int stride_count = 0;
 	int player_x = 0;
@@ -273,7 +276,62 @@ int main(int argc, char* argv[]){
 
 	bool flag = false;
 
-	//ステージ描画
+	int stage_select = 0;
+	//スタート画面
+	while (true) {
+		clock_t current = clock();
+		if (time_manage(start, current)) {
+			cv::Mat start_menu = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+			cv::putText(start_menu, "Select Stage", cv::Point(150, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+			cv::putText(start_menu, "Level. 1", cv::Point(200, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			cv::putText(start_menu, "Level. 2", cv::Point(200, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			cv::putText(start_menu, "Level. 3", cv::Point(200, 250), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			
+			int key = cv::waitKey(10);
+			if (key == CV_WAITKEY_W) {
+				if (stage_select > 0)
+					stage_select -= 1;
+			}
+			else if (key == CV_WAITKEY_X) {
+				if (stage_select < 2)
+					stage_select += 1;
+			}
+			else if (key == CV_WAITKEY_Z) {
+				break;
+			}
+
+			switch (stage_select) {
+			case 0:
+				cv::putText(start_menu, "Level. 1", cv::Point(200, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			case 1:
+				cv::putText(start_menu, "Level. 2", cv::Point(200, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			case 2:
+				cv::putText(start_menu, "Level. 3", cv::Point(200, 250), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			}
+
+			cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+			cv::imshow("drawing", start_menu);
+			start = current;
+		}
+
+	}
+	std::cout << "Select Stage: Level." << stage_select << std::endl;
+
+	switch (stage_select) {
+	case 1:
+		img = stage_1;
+		break;
+	case 2:
+		img = stage_2;
+		break;
+	}
+
+	//ゲーム進行
 	while (stride_count < F_SIZE_X - (F_SIZE_Y * 2)) {
 		clock_t current = clock();
 		
@@ -291,12 +349,6 @@ int main(int argc, char* argv[]){
 		}
 		
 		if (time_manage(start, current)) {
-			//std::cout << player.get_x() << std::endl;
-			//std::cout << player.get_y() << std::endl;
-			//std::cout << player.get_w() << std::endl;
-			//std::cout << player.get_h() << std::endl;
-			//std::cout <<  player.get_hit_info()<<", " << player.get_state()<< ", " << player.get_w() << ", " << player.get_h()  << std::endl;
-
 			stride_count += 5;
 			cv::Mat test(img, cv::Rect(stride_count, 0, D_SIZE_X, D_SIZE_Y));
 			cv::Mat display = test.clone();
