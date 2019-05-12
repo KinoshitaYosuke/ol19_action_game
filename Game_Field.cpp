@@ -156,7 +156,7 @@ void Player::hit_check() {
 		break;
 	case HIT_XY_UP:
 		move_x = 5;
-		move_y = 0;
+		move_y = -5;
 		jump_counter = 0;
 		break;
 	case HIT_XY_DOWN:
@@ -224,7 +224,7 @@ cv::Mat Make_Field() {
 
 	
 
-	for (int x = 0; x <= F_SIZE_X-30; x += 30) {
+	for (int x = 0; x <= F_SIZE_X-60; x += 60) {
 		std::random_device rand;
 		std::mt19937 mt(rand());
 		std::uniform_int_distribution<> rand255(0, 255);
@@ -235,7 +235,9 @@ cv::Mat Make_Field() {
 	//cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
 
 	cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(500, F_SIZE_Y - 120), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(500, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(800, 0), cv::Point(1000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+	cv::rectangle(field, cv::Point(1300, F_SIZE_Y - 120), cv::Point(2000, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
 
 
 	cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
