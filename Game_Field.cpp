@@ -251,10 +251,31 @@ bool time_manage(clock_t start, clock_t current) {
 }
 
 //“–‚½‚è”»’è
-int Collision_Detection(int player[], int block[]) {
-	//IoUŒvŽZ
-
-	return 0;
+int Collision_Detection(Player player, int hit_field[60][120]) {
+	int result = NO_HIT;
+	for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
+		if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK) {
+			//std::cout << y << ", " << int((player.get_x() + player.get_w()) / 5) << std::endl;
+			result = HIT_X;
+		}
+	}
+	for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
+		if (hit_field[player.get_y() / 5][x] == BLOCK) {
+			if (result == HIT_X)
+				result = HIT_XY_UP;
+			else if (result != HIT_XY_UP)
+				result = HIT_Y_UP;
+		}
+	}
+	for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
+		if (hit_field[(player.get_y() + player.get_h()) / 5][x] == BLOCK) {
+			if (result == HIT_X)
+				result = HIT_XY_DOWN;
+			else if (result != HIT_XY_DOWN)
+				result = HIT_Y_DOWN;
+		}
+	}
+	return result;
 
 }
 
@@ -368,7 +389,28 @@ int main(int argc, char* argv[]){
 				//std::cout << std::endl;
 			}
 
-			//int check_collision = Collision_Detection();
+			int check_collision = Collision_Detection(player, hit_field);
+			switch (check_collision) {
+			case NO_HIT:
+				player.set_hit_info(NO_HIT);
+				break;
+			case HIT_X:
+				player.set_hit_info(HIT_X);
+				break;
+			case HIT_Y_UP:
+				player.set_hit_info(HIT_Y_UP);
+				break;
+			case HIT_XY_UP:
+				player.set_hit_info(HIT_XY_UP);
+				break;
+			case HIT_Y_DOWN:
+				player.set_hit_info(HIT_Y_DOWN);
+				break;
+			case HIT_XY_DOWN:
+				player.set_hit_info(HIT_XY_DOWN);
+				break;
+			}
+			/*
 			player.set_hit_info(NO_HIT);
 			for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
 				if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK) {
@@ -392,6 +434,7 @@ int main(int argc, char* argv[]){
 						player.set_hit_info(HIT_Y_DOWN);
 				}
 			}
+			*/
 			std::cout << player.get_hit_info() << std::endl;
 
 			player.hit_check();
