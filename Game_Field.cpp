@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include <time.h>
 
+#include<string>
 #include <random>
 
 //ステージの大きさ
@@ -293,6 +294,15 @@ bool Failuer_Detection(int x) {
 	else return false;
 }
 
+void Start_CountDown(cv::Mat Start) {
+	for (int i = 3; i > 0; i--) {
+		cv::Mat count_display = Start.clone();
+		cv::putText(count_display, std::to_string(i), cv::Point(250, 150), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(0, 255, 255), 15, CV_AA);
+		cv::imshow("drawing", count_display);
+		cv::waitKey(1000);
+	}
+}
+
 int main(int argc, char* argv[]){
 	cv::Mat stage_0 = Make_Field(0);
 	cv::Mat stage_1 = Make_Field(1);
@@ -470,16 +480,17 @@ int main(int argc, char* argv[]){
 
 
 			if (flag == false) {
-				cv::waitKey(0);
+				Start_CountDown(display);
 				flag = true;
 			}
-			if (clear_flag == true)
+			if (clear_flag == true) {
 				break;
-
+			}
 			start = current;
 		}
 	}
 
+	//クリア，失敗判定
 	if (clear_flag == true) {
 		cv::Mat clear = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
 
