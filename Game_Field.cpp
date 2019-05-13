@@ -223,6 +223,7 @@ int Player::get_jump_counter() {
 //ステージ生成
 cv::Mat Make_Field(int level) {
 	cv::Mat field = cv::Mat::zeros(F_SIZE_Y, F_SIZE_X, CV_8UC3);
+	/*
 	for (int x = 0; x <= F_SIZE_X - 60; x += 60) {
 		std::random_device rand;
 		std::mt19937 mt(rand());
@@ -230,6 +231,8 @@ cv::Mat Make_Field(int level) {
 		std::cout << x << std::endl;
 		cv::rectangle(field, cv::Point(x, 0), cv::Point(x + 60, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
 	}
+	*/
+	cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(200, 200, 0), -1, CV_AA);
 
 	if (level == 0) {
 		cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
