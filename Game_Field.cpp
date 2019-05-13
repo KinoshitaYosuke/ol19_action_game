@@ -15,6 +15,7 @@
 #define BLOCK 1
 #define NEEDLE 2
 #define COIN 3
+#define CLEAR 100
 
 //当たり判定
 #define NO_HIT 0
@@ -221,26 +222,31 @@ int Player::get_jump_counter() {
 //ステージ生成
 cv::Mat Make_Field(int level) {
 	cv::Mat field = cv::Mat::zeros(F_SIZE_Y, F_SIZE_X, CV_8UC3);
-
-	for (int x = 0; x <= F_SIZE_X-60; x += 60) {
+	for (int x = 0; x <= F_SIZE_X - 60; x += 60) {
 		std::random_device rand;
 		std::mt19937 mt(rand());
 		std::uniform_int_distribution<> rand255(0, 255);
 		std::cout << x << std::endl;
-		cv::rectangle(field, cv::Point(x, 0), cv::Point(x+60, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
+		cv::rectangle(field, cv::Point(x, 0), cv::Point(x + 60, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
 	}
 
-	//cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
+	if (level == 0) {
+		cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+	}
+	else if (level == 1) {
+		cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(0, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(300, 0), cv::Point(800, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(1300, F_SIZE_Y - 120), cv::Point(2000, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(1600, 0), cv::Point(2000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
+		cv::rectangle(field, cv::Point(200, 350), cv::Point(300, 450), cv::Scalar(200, 0, 0), -1, CV_AA);
 
-	cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(0, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(300, 0), cv::Point(800, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(1300, F_SIZE_Y - 120), cv::Point(2000, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(1600, 0), cv::Point(2000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+	}
+	else if (level == 2) {
 
-
-	cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
-	cv::rectangle(field, cv::Point(200, 350), cv::Point(300, 450), cv::Scalar(200, 0, 0), -1, CV_AA);
+	}
+	cv::rectangle(field, cv::Point(F_SIZE_X - D_SIZE_X, 0), cv::Point(F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), cv::Scalar(0, 255, 0), -1, CV_AA);
 
 	return field;
 }
@@ -257,6 +263,9 @@ int Collision_Detection(Player player, int hit_field[60][120]) {
 		if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK) {
 			//std::cout << y << ", " << int((player.get_x() + player.get_w()) / 5) << std::endl;
 			result = HIT_X;
+		}
+		else if (hit_field[y][int((player.get_x() + player.get_w()) / 5 - 1)] == CLEAR) {
+			return CLEAR;
 		}
 	}
 	for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
@@ -279,6 +288,10 @@ int Collision_Detection(Player player, int hit_field[60][120]) {
 
 }
 
+bool Failuer_Detection(int x) {
+	if (x <= 0) return true;
+	else return false;
+}
 
 int main(int argc, char* argv[]){
 	cv::Mat stage_0 = Make_Field(0);
@@ -296,7 +309,7 @@ int main(int argc, char* argv[]){
 	player.initial_coordinate();
 
 	bool flag = false;
-
+	bool clear_flag = false;
 	int stage_select = 0;
 	//スタート画面
 	while (true) {
@@ -382,6 +395,9 @@ int main(int argc, char* argv[]){
 					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
 						hit_field[y][x] = BLOCK;
 					}
+					else if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 255, 0)) {
+						hit_field[y][x] = CLEAR;
+					}
 					else {
 						hit_field[y][x] = EMPTY;
 					}
@@ -409,6 +425,8 @@ int main(int argc, char* argv[]){
 			case HIT_XY_DOWN:
 				player.set_hit_info(HIT_XY_DOWN);
 				break;
+			case CLEAR:
+				clear_flag = true;
 			}
 			/*
 			player.set_hit_info(NO_HIT);
@@ -440,6 +458,11 @@ int main(int argc, char* argv[]){
 			player.hit_check();
 			player.set_coordinate();
 
+			if (Failuer_Detection(player.get_x())) {
+				clear_flag = false;
+				break;
+			}
+
 			cv::rectangle(display, cv::Point(player.get_x(), player.get_y()), 
 				cv::Point(player.get_x() + player.get_w(), player.get_y() + player.get_h()), cv::Scalar(255, 255, 255), -1, CV_AA);
 			cv::imshow("drawing", display);
@@ -450,27 +473,53 @@ int main(int argc, char* argv[]){
 				cv::waitKey(0);
 				flag = true;
 			}
-			/*
-			for (int y = 0; y < int(D_SIZE_Y / 5); y++) {
-				for (int x = 0; x < int(D_SIZE_X / 5); x++) {
-					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
-						std::cout << "#";
-					}
-					else if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(255, 255, 255))
-						std::cout << "O";
-					else {
-						std::cout << " ";
-					}
-				}
-				std::cout << std::endl;
-			}
-			*/
-			//cv::waitKey(5);
+			if (clear_flag == true)
+				break;
+
 			start = current;
-
 		}
-		
+	}
 
+	if (clear_flag == true) {
+		cv::Mat clear = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+		cv::putText(clear, "Conguratulation!!", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+		cv::putText(clear, "Push W: Start Menu", cv::Point(50, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+		cv::putText(clear, "Push X: Finish", cv::Point(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+
+
+		cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+		cv::imshow("drawing", clear);
+
+		int key = cv::waitKey(0);
+		if (key == CV_WAITKEY_W) {
+			return 0;
+		}
+		else if (key == CV_WAITKEY_X) {
+			return 0;
+		}
+
+	}
+	else {
+		cv::Mat failuer = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+		cv::putText(failuer, "Stage Failuer...", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+		cv::putText(failuer, "Push W: Start Menu", cv::Point(50, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+		cv::putText(failuer, "Push X: Finish", cv::Point(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+
+
+		cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+		cv::imshow("drawing", failuer);
+
+		int key = cv::waitKey(0);
+		if (key == CV_WAITKEY_W) {
+			return 0;
+		}
+		else if (key == CV_WAITKEY_X) {
+			return 0;
+		}
 	}
 
 	std::cout << "Finished" << std::endl;
