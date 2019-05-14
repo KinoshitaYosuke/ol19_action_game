@@ -292,8 +292,8 @@ int Collision_Detection(Player player, int hit_field[60][120]) {
 
 }
 
-bool Failuer_Detection(int x) {
-	if (x <= 0) return true;
+bool Failuer_Detection(int x, int y, int height) {
+	if (x <= 0 || (y+height) >= F_SIZE_Y) return true;
 	else return false;
 }
 
@@ -471,7 +471,7 @@ int main(int argc, char* argv[]){
 			player.hit_check();
 			player.set_coordinate();
 
-			if (Failuer_Detection(player.get_x())) {
+			if (Failuer_Detection(player.get_x(), player.get_y(), player.get_h())) {
 				clear_flag = false;
 				break;
 			}
