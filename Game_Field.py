@@ -161,12 +161,12 @@ def Make_Field(level):
         cv2.rectangle(field, (0, 0), (1000, F_SIZE_Y - 250), (0, 0, 255), -1)
         cv2.rectangle(field, (300, 0), (800, F_SIZE_Y - 200), (0, 0, 255), -1)
         cv2.rectangle(field, (1300, F_SIZE_Y - 120), (2000, F_SIZE_Y), (0, 0, 255), -1)
-        cv2.rectangle(field, (1600, 0), (2000, F_SIZE_Y), (0, 0, 255), -1)
+        cv2.rectangle(field, (1600, 0), (2000, 100), (0, 0, 255), -1)
         cv2.rectangle(field, (200, 350), (300, 450), (0, 0, 255), -1)
     elif level == 2:
         i = 0
 
-    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X, 0), (F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), (255, 0, 0), -1)
+    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X, 0), (F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), (0, 255, 0), -1)
 
     return field
 
@@ -178,8 +178,8 @@ def time_manage(start, current):
 
 def Collision_Detection(player, hit_field):
     result = NO_HIT
-    for y in range((int)(player.get_y() / 5), (int)((player.get_y() + player.get_h()) / 5)):
-        print(y)
+    for y in range((int)(player.get_y() / 5) , (int)((player.get_y() + player.get_h()) / 5)):
+        print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
         if hit_field[y][(int)((player.get_x() + player.get_w()) / 5)] == BLOCK:
             result = HIT_X
         elif hit_field[y][(int)((player.get_x() + player.get_w()) / 5)] == CLEAR:
