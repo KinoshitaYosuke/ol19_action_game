@@ -207,7 +207,7 @@ def Failuer_Detection(x, y, height):
 def Start_CountDown(Start):
     for i in range(0, 3):
         count_display = Start.copy()
-        cv2.putText(count_display, "test", (250, 150), cv2.FONT_HERSHEY_SIMPLEX, 5, (255, 255, 255), 15, cv2.LINE_AA)
+        cv2.putText(count_display, str(3 - i), (250, 150), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 255), 15, cv2.LINE_AA)
         cv2.imshow("drawing", count_display)
         cv2.waitKey(1000)
 
