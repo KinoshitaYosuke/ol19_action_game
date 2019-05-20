@@ -212,6 +212,11 @@ def Start_CountDown(Start):
         cv2.waitKey(1000)
 
 def main():
+    video_file='c:/outtest.avi'
+    
+    # カメラのキャプチャ
+    cap = cv2.VideoCapture(video_file)
+
     stage_0 = Make_Field(0)
     stage_1 = Make_Field(1)
     stage_2 = Make_Field(2)
@@ -221,8 +226,7 @@ def main():
     player_x = 0
     player_y = 0
 
-    start = time.time()
-
+    
     player = Player
     player.initial_coordinate()
 
@@ -230,9 +234,16 @@ def main():
     clear_flag = False
     stage_select = 0
 
+    #frame = cap.read()[1]
+
+    start = time.time()
+
     while True:
+        
         current = time.time()
         if time_manage(start, current):
+           
+
             start_menu = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
             cv2.putText(start_menu, "Select Stage", (150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
             cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
@@ -267,6 +278,7 @@ def main():
         img = stage_2
 
     while stride_count < F_SIZE_X - (F_SIZE_Y * 2):
+        player_img = np.zeros((10, 10, 3), np.uint8)
         current = time.time()
 
         key = cv2.waitKey(1)
@@ -278,6 +290,38 @@ def main():
             player.change_state(STAND)
 
         if time_manage(start, current):
+            size_x, size_y = 0, 0
+            frame = cap.read()[1]
+            kernel = np.ones((7,7),np.uint8)
+            opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
+
+            label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
+            # オブジェクト情報を項目別に抽出
+            n = label[0] - 1
+            data = np.delete(label[2], 0, 0)
+            center = np.delete(label[3], 0, 0)
+
+            # オブジェクト情報を利用してラベリング結果を画面に表示
+            min_x, min_y, max_w, max_h = 1000, 1000, 0, 0
+            for i in range(n):
+                if min_x > data[i][0]:
+                    min_x = data[i][0]
+                if min_y > data[i][1]:
+                    min_y = data[i][1]
+                if max_w < data[i][0] + data[i][2]:
+                    max_w = data[i][0] + data[i][2]
+                if max_h < data[i][1] + data[i][3]:
+                    max_h = data[i][1] + data[i][3]
+                cv2.rectangle(opening, (data[i][0], data[i][1]), (data[i][0]+data[i][2], data[i][1]+data[i][3]), (0, 255, 0))
+            
+            if n != 0:
+                player_img = opening[min_y:max_h, min_x:max_w]
+                #cv2.rectangle(opening, (min_x, min_y), (max_w, max_h), (0, 0, 255))
+                size_x = 50
+                size_y = (int)(50 * (max_h - min_y) / (max_w - min_x))
+                player_img = cv2.resize(player_img, (size_x, size_y))
+                cv2.imshow("player", player_img)
+
             stride_count += 5
             test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = test.copy()
@@ -320,6 +364,10 @@ def main():
 
             cv2.rectangle(display, (player.get_x(), player.get_y()), 
                           (player.get_x() + player.get_w(), player.get_y() + player.get_h()), (255, 255, 255), -1)
+            if n != 0:
+                #player_img = cv2.cvtColor(player_img, cv2.COLOR_GRAY2BGR)
+                display[player.get_y() - 50:player.get_y() - 50 +size_y, player.get_x():player.get_x()+size_x] = player_img
+            
             cv2.imshow("drawing", display)
 
             if start_flag == False:
