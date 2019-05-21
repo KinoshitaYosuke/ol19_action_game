@@ -23,6 +23,7 @@ HIT_Y_UP = 2
 HIT_X = 3
 HIT_XY_DOWN = 4
 HIT_XY_UP = 5
+HIT_XY = 6
 
 #プレイヤー状態
 STAND = 0
@@ -114,13 +115,20 @@ class Player:
             Player.move_x = 5
         elif Player.hit_info == HIT_XY_UP:
             Player.move_x = 5
-            Player.move_y -= 5
+            Player.move_y = -5
             Player.jump_counter = 0
         elif Player.hit_info == HIT_XY_DOWN:
             Player.move_x = 5
             if Player.player_state != JUMP:
                 Player.move_y = 0
                 Player.jump_counter = 20
+        elif Player.hit_info == HIT_XY:
+            if Player.player_state != JUMP:
+                Player.move_y = 0
+                Player.jump_counter = 20
+                Player.move_x = 5
+                Player.move_y = -5
+                Player.jump_counter = 0
 
     def jump_process():
         if Player.player_state == JUMP:
@@ -165,6 +173,7 @@ def Make_Field(level):
         cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
     elif level == 1:
         cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
+        #cv2.rectangle(field, (800, 0), (F_SIZE_X, F_SIZE_Y - 100), (0, 0, 255), -1)
         cv2.rectangle(field, (0, 0), (1000, F_SIZE_Y - 250), (0, 0, 255), -1)
         cv2.rectangle(field, (300, 0), (800, F_SIZE_Y - 200), (0, 0, 255), -1)
         cv2.rectangle(field, (1300, F_SIZE_Y - 120), (2000, F_SIZE_Y), (0, 0, 255), -1)
@@ -187,23 +196,31 @@ def Collision_Detection(player, hit_field):
     result = NO_HIT
     for y in range((int)((player.get_y() - player.get_h()) / 5) , (int)(player.get_y() / 5)):
         #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
-        print(y)
         if hit_field[y][(int)(player.get_x() / 5)] == BLOCK:
+            print("hit x")
             result = HIT_X
+            break
         elif hit_field[y][(int)(player.get_x() / 5)] == CLEAR:
             return CLEAR
     for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
         if hit_field[(int)((player.get_y() - player.get_h()) / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_UP
-            elif result != HIT_XY_UP:
+                break
+            elif result == NO_HIT:
                 result = HIT_Y_UP
+                break
     for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
         if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_DOWN
-            elif result != HIT_XY_DOWN:
+                break
+            elif result == NO_HIT:
                 result = HIT_Y_DOWN
+                break
+            elif result == HIT_XY_UP:
+                result = HIT_XY
+                break
     return result
 
 def Failuer_Detection(x, y, height):
@@ -332,7 +349,7 @@ def main():
                 #result = np.where(mask==255, player_img, player_img)
                 cv2.imshow("player", player_img)
                 player.set_width_height(size_x, size_y)
-                print(player.get_w(), player.get_h())
+                #print(player.get_w(), player.get_h())
 
             stride_count += 5
             test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
@@ -370,25 +387,18 @@ def main():
             player.hit_check()
             player.set_coordinate()
 
-            if Failuer_Detection(player.get_x(), player.get_y(), player.get_h()):
+            if Failuer_Detection(player.get_x() - player.get_w(), player.get_y(), player.get_h()):
                 clear_flag = False
                 break
 
-            #cv2.rectangle(display, (player.get_x() - player.get_w(), player.get_y() - player.get_h()), 
-            #              (player.get_x(), player.get_y()), (255, 255, 255), -1)
-            if n != 0:
-                #player_img = cv2.cvtColor(player_img, cv2.COLOR_GRAY2BGR)
-                #display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = player_img
-                #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
-                #result = np.where(mask==255, player_img, display)
-                #cv2.imshow("drawing", result)
-
+            if n != 0:    
                 #人物領域外の透過処理
                 mask = player_img.copy()
                 mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
                 mask[mask < 200] = 0
                 mask[mask >= 200] = 255
                 mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+                print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
                 result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
                 cv2.imshow("result", mask)
                 display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
