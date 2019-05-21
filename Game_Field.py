@@ -86,6 +86,7 @@ class Player:
             Player.width = 50
             Player.height = 100
         elif state == BEND:
+            return
             if Player.player_state != BEND:
                 Player.coordinate_y += 50
             Player.player_state = BEND
@@ -319,7 +320,7 @@ def main():
                     max_w = data[i][0] + data[i][2]
                 if max_h < data[i][1] + data[i][3]:
                     max_h = data[i][1] + data[i][3]
-                cv2.rectangle(opening, (data[i][0], data[i][1]), (data[i][0]+data[i][2], data[i][1]+data[i][3]), (0, 255, 0))
+                #cv2.rectangle(opening, (data[i][0], data[i][1]), (data[i][0]+data[i][2], data[i][1]+data[i][3]), (0, 255, 0))
             
             if n != 0:
                 player_img = opening[min_y:max_h, min_x:max_w]
@@ -327,6 +328,8 @@ def main():
                 size_x = 50
                 size_y = (int)(50 * (max_h - min_y) / (max_w - min_x))
                 player_img = cv2.resize(player_img, (size_x, size_y))
+                #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
+                #result = np.where(mask==255, player_img, player_img)
                 cv2.imshow("player", player_img)
                 player.set_width_height(size_x, size_y)
                 print(player.get_w(), player.get_h())
@@ -371,12 +374,25 @@ def main():
                 clear_flag = False
                 break
 
-            cv2.rectangle(display, (player.get_x() - player.get_w(), player.get_y() - player.get_h()), 
-                          (player.get_x(), player.get_y()), (255, 255, 255), -1)
+            #cv2.rectangle(display, (player.get_x() - player.get_w(), player.get_y() - player.get_h()), 
+            #              (player.get_x(), player.get_y()), (255, 255, 255), -1)
             if n != 0:
                 #player_img = cv2.cvtColor(player_img, cv2.COLOR_GRAY2BGR)
-                display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = player_img
-            
+                #display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = player_img
+                #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
+                #result = np.where(mask==255, player_img, display)
+                #cv2.imshow("drawing", result)
+
+                #人物領域外の透過処理
+                mask = player_img.copy()
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                mask[mask < 200] = 0
+                mask[mask >= 200] = 255
+                mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+                result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
+                cv2.imshow("result", mask)
+                display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
+
             cv2.imshow("drawing", display)
 
             if start_flag == False:
