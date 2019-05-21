@@ -56,14 +56,17 @@ class Player:
         Player.height = 100
         Player.move_x = 0
         Player.move_y = 0
-        Player.coordinate_x = (int)(D_SIZE_X / 2) - Player.width
-        Player.coordinate_y = 250 - Player.height
+        #Player.coordinate_x = (int)(D_SIZE_X / 2) - Player.width
+        #Player.coordinate_y = 250 - Player.height
+        Player.coordinate_x = (int)(D_SIZE_X / 2)
+        Player.coordinate_y = 250
         Player.jump_counter = 20
+
 
     def set_coordinate():
         Player.coordinate_x -= Player.move_x
         Player.coordinate_y -= Player.move_y
-
+        
     def change_state(state):
         if Player.player_state == JUMP: return
         if Player.player_state == state: return
@@ -131,6 +134,9 @@ class Player:
     def set_hit_info(info):
         Player.hit_info = info
 
+    def set_width_height(w, h):
+        Player.width = w
+        Player.height = h
 
     def get_x():
         return Player.coordinate_x
@@ -178,20 +184,21 @@ def time_manage(start, current):
 
 def Collision_Detection(player, hit_field):
     result = NO_HIT
-    for y in range((int)(player.get_y() / 5) , (int)((player.get_y() + player.get_h()) / 5)):
-        print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
-        if hit_field[y][(int)((player.get_x() + player.get_w()) / 5)] == BLOCK:
+    for y in range((int)((player.get_y() - player.get_h()) / 5) , (int)(player.get_y() / 5)):
+        #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
+        print(y)
+        if hit_field[y][(int)(player.get_x() / 5)] == BLOCK:
             result = HIT_X
-        elif hit_field[y][(int)((player.get_x() + player.get_w()) / 5)] == CLEAR:
+        elif hit_field[y][(int)(player.get_x() / 5)] == CLEAR:
             return CLEAR
-    for x in range((int)(player.get_x() / 5), (int)((player.get_x() + player.get_w()) / 5)):
-        if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
+    for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
+        if hit_field[(int)((player.get_y() - player.get_h()) / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_UP
             elif result != HIT_XY_UP:
                 result = HIT_Y_UP
-    for x in range((int)(player.get_x() / 5), (int)((player.get_x() + player.get_w()) / 5)):
-        if hit_field[(int)((player.get_y() + player.get_h()) / 5)][x] == BLOCK:
+    for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
+        if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_DOWN
             elif result != HIT_XY_DOWN:
@@ -199,7 +206,7 @@ def Collision_Detection(player, hit_field):
     return result
 
 def Failuer_Detection(x, y, height):
-    if x <= 0 or y + height >= F_SIZE_Y:
+    if x <= 0 or y >= F_SIZE_Y:
         return True
     else:
         return False
@@ -212,7 +219,7 @@ def Start_CountDown(Start):
         cv2.waitKey(1000)
 
 def main():
-    video_file='c:/outtest.avi'
+    video_file='./outtest.avi'
     
     # カメラのキャプチャ
     cap = cv2.VideoCapture(video_file)
@@ -321,6 +328,8 @@ def main():
                 size_y = (int)(50 * (max_h - min_y) / (max_w - min_x))
                 player_img = cv2.resize(player_img, (size_x, size_y))
                 cv2.imshow("player", player_img)
+                player.set_width_height(size_x, size_y)
+                print(player.get_w(), player.get_h())
 
             stride_count += 5
             test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
@@ -362,11 +371,11 @@ def main():
                 clear_flag = False
                 break
 
-            cv2.rectangle(display, (player.get_x(), player.get_y()), 
-                          (player.get_x() + player.get_w(), player.get_y() + player.get_h()), (255, 255, 255), -1)
+            cv2.rectangle(display, (player.get_x() - player.get_w(), player.get_y() - player.get_h()), 
+                          (player.get_x(), player.get_y()), (255, 255, 255), -1)
             if n != 0:
                 #player_img = cv2.cvtColor(player_img, cv2.COLOR_GRAY2BGR)
-                display[player.get_y() - 50:player.get_y() - 50 +size_y, player.get_x():player.get_x()+size_x] = player_img
+                display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = player_img
             
             cv2.imshow("drawing", display)
 
