@@ -192,7 +192,18 @@ def time_manage(start, current):
     else:
         return False
 
-def Collision_Detection(player, hit_field):
+def Collision_Detection(player, display):
+    hit_field = [[0 for col in range((int)(D_SIZE_X / 5))] for row in range((int)(D_SIZE_Y / 5))]
+    for y in range(0, (int)(D_SIZE_Y / 5)):
+        for x in range(0, (int)(D_SIZE_X / 5)):
+            blue, green, red = display[y * 5, x * 5, 0], display[y * 5, x * 5, 1], display[y * 5, x * 5, 2]
+            if [blue, green, red] == [0, 0, 255]:
+                hit_field[y][x] = BLOCK
+            elif [blue, green, red] == [0, 255, 0]:
+                hit_field[y][x] = CLEAR
+            else:
+                hit_field[y][x] = EMPTY
+
     result = NO_HIT
     for y in range((int)((player.get_y() - player.get_h()) / 5) , (int)(player.get_y() / 5)):
         #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
@@ -245,6 +256,54 @@ def Make_Start_Manu():
 
     return start_menu
 
+def Select_Stage(start_menu, stage_select):
+    if stage_select == 0:
+        cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+    elif stage_select == 1:
+        cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+    elif stage_select == 2:
+        cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+
+    return start_menu, stage_select
+
+def Calculate_Player_Region(n, data):
+    min_x, min_y, max_w, max_h = 1000, 1000, 0, 0
+    for i in range(n):
+        if min_x > data[i][0]:
+            min_x = data[i][0]
+        if min_y > data[i][1]:
+            min_y = data[i][1]
+        if max_w < data[i][0] + data[i][2]:
+            max_w = data[i][0] + data[i][2]
+        if max_h < data[i][1] + data[i][3]:
+            max_h = data[i][1] + data[i][3]
+
+    return min_x, min_y, max_w, max_h
+
+def Player_Transparent(player, player_img, display):
+    mask = player_img.copy()
+    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    mask[mask < 200] = 0
+    mask[mask >= 200] = 255
+    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
+    result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
+    cv2.imshow("result", mask)
+    display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
+    return display
+
+def After_Process(word):
+    clear = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
+    cv2.putText(clear, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(clear, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(clear, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.imshow("drawing", clear)
+    key = cv2.waitKey(0)
+    if key == CV_WAITKEY_W:
+        return
+    elif key == CV_WAITKEY_X:
+        return
+       
 def Game_Process():
     video_file='./outtest.avi'
     
@@ -260,7 +319,6 @@ def Game_Process():
     player_x = 0
     player_y = 0
 
-    
     player = Player
     player.initial_coordinate()
 
@@ -273,7 +331,6 @@ def Game_Process():
     start = time.time()
 
     while True:
-        
         current = time.time()
         if time_manage(start, current):
             start_menu = Make_Start_Manu()
@@ -287,14 +344,9 @@ def Game_Process():
                     stage_select += 1
             elif key == CV_WAITKEY_Z:
                 break
-
-            if stage_select == 0:
-                cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-            elif stage_select == 1:
-                cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-            elif stage_select == 2:
-                cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-
+            
+            start_menu, stage_select = Select_Stage(start_menu, stage_select)
+            
             cv2.imshow("drawing", start_menu)
             start = current
 
@@ -318,7 +370,6 @@ def Game_Process():
             player.change_state(STAND)
 
         if time_manage(start, current):
-            size_x, size_y = 0, 0
             frame = cap.read()[1]
             kernel = np.ones((7,7),np.uint8)
             opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
@@ -330,48 +381,23 @@ def Game_Process():
             center = np.delete(label[3], 0, 0)
 
             # オブジェクト情報を利用してラベリング結果を画面に表示
-            min_x, min_y, max_w, max_h = 1000, 1000, 0, 0
-            for i in range(n):
-                if min_x > data[i][0]:
-                    min_x = data[i][0]
-                if min_y > data[i][1]:
-                    min_y = data[i][1]
-                if max_w < data[i][0] + data[i][2]:
-                    max_w = data[i][0] + data[i][2]
-                if max_h < data[i][1] + data[i][3]:
-                    max_h = data[i][1] + data[i][3]
-                #cv2.rectangle(opening, (data[i][0], data[i][1]), (data[i][0]+data[i][2], data[i][1]+data[i][3]), (0, 255, 0))
-            
+            min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
             if n != 0:
                 player_img = opening[min_y:max_h, min_x:max_w]
-                #cv2.rectangle(opening, (min_x, min_y), (max_w, max_h), (0, 0, 255))
-                size_x = 50
-                size_y = (int)(50 * (max_h - min_y) / (max_w - min_x))
-                player_img = cv2.resize(player_img, (size_x, size_y))
+                
+                player_img = cv2.resize(player_img, (50, (int)(50 * (max_h - min_y) / (max_w - min_x))))
                 #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
                 #result = np.where(mask==255, player_img, player_img)
                 cv2.imshow("player", player_img)
-                player.set_width_height(size_x, size_y)
-                #print(player.get_w(), player.get_h())
-
+                player.set_width_height(player_img.shape[1], player_img.shape[0])
+                
             stride_count += 5
             test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = test.copy()
             player.jump_process()
 
-            #hit_field = [(int)(D_SIZE_Y / 5)][(int)(D_SIZE_X / 5)]
-            hit_field = [[0 for col in range((int)(D_SIZE_X / 5))] for row in range((int)(D_SIZE_Y / 5))]
-            for y in range(0, (int)(D_SIZE_Y / 5)):
-                for x in range(0, (int)(D_SIZE_X / 5)):
-                    blue, green, red = display[y * 5, x * 5, 0], display[y * 5, x * 5, 1], display[y * 5, x * 5, 2]
-                    if [blue, green, red] == [0, 0, 255]:
-                        hit_field[y][x] = BLOCK
-                    elif [blue, green, red] == [0, 255, 0]:
-                        hit_field[y][x] = CLEAR
-                    else:
-                        hit_field[y][x] = EMPTY
 
-            check_collision = Collision_Detection(player, hit_field)
+            check_collision = Collision_Detection(player, display)
             if check_collision == NO_HIT:
                 player.set_hit_info(NO_HIT)
             elif check_collision == HIT_X:
@@ -396,15 +422,7 @@ def Game_Process():
 
             if n != 0:    
                 #人物領域外の透過処理
-                mask = player_img.copy()
-                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask[mask < 200] = 0
-                mask[mask >= 200] = 255
-                mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-                print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
-                result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
-                cv2.imshow("result", mask)
-                display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
+                display = Player_Transparent(player, player_img, display)
 
             cv2.imshow("drawing", display)
 
@@ -418,38 +436,19 @@ def Game_Process():
             start = current
 
     if clear_flag == True:
-        clear = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-        cv2.putText(clear, "Conguratulation!!", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-        cv2.putText(clear, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(clear, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow("drawing", clear)
-
-        key = cv2.waitKey(0)
-        if key == CV_WAITKEY_W:
-            return 0
-        elif key == CV_WAITKEY_X:
-            return 0
+        After_Process("Conguratulation!!")
+        return 0
+        
     else:
-        failuer = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-        cv2.putText(failuer, "Stage Filuer...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-        cv2.putText(failuer, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(failuer, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow("drawing", failuer)
-
-        key = cv2.waitKey(0)
-        if key == CV_WAITKEY_W:
-            return 0
-        elif key == CV_WAITKEY_X:
-            return 0
-    
+         After_Process("Stage Failuer...")
+         return 0
 
     print("Finished")
 
     return 0
 
 def main():
+    """
     video_file='./outtest.avi'
     
     # カメラのキャプチャ
@@ -658,6 +657,8 @@ def main():
     print("Finished")
 
     return 0
+    """
+    Game_Process()
 
 if __name__ == '__main__':
     main()
