@@ -166,6 +166,14 @@ class Player:
     def get_jump_counter():
         return Player.jump_counter
 
+def Load_Board():
+    img = cv2.imread("./skateboard.png")
+    #白領域をマスク黒化
+
+    #マスク黒領域を背景とする
+    return img
+    return skate_board
+
 def Make_Field(level):
     field = np.zeros((F_SIZE_Y, F_SIZE_X, 3), np.uint8)
     cv2.rectangle(field, (0, 0), (F_SIZE_X, F_SIZE_Y), (200, 200, 0), -1)
@@ -306,6 +314,7 @@ def After_Process(word):
        
 def Game_Process():
     video_file='./outtest.avi'
+    skate_board = Load_Board()
     
     # カメラのキャプチャ
     cap = cv2.VideoCapture(video_file)
@@ -333,6 +342,7 @@ def Game_Process():
     while True:
         current = time.time()
         if time_manage(start, current):
+            frame1 = cap.read()[1]
             start_menu = Make_Start_Manu()
 
             key = cv2.waitKey(10)
@@ -422,9 +432,13 @@ def Game_Process():
 
             if n != 0:    
                 #人物領域外の透過処理
+                #display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
+                #print(skate_board.shape[:2])
+                player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
                 display = Player_Transparent(player, player_img, display)
 
             cv2.imshow("drawing", display)
+            cv2.imshow("skate", skate_board)
 
             if start_flag == False:
                 Start_CountDown(display)
