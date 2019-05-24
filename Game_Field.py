@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 import time
+from Subtraction import *
 
 #ステージの大きさ
 F_SIZE_X = 2500
@@ -76,23 +77,23 @@ class Player:
             if Player.player_state == BEND:
                 Player.coordinate_y -= 50
             Player.player_state = STAND
-            Player.width = 50
-            Player.height = 100
+            #Player.width = 50
+            #Player.height = 100
         elif state == JUMP:
             if Player.hit_info != HIT_Y_DOWN and Player.hit_info !=HIT_XY_DOWN:
                 return
             if Player.player_state == BEND:
                 Player.coordinate_y -= 50
             Player.player_state = JUMP
-            Player.width = 50
-            Player.height = 100
+            #Player.width = 50
+            #Player.height = 100
         elif state == BEND:
             return
             if Player.player_state != BEND:
                 Player.coordinate_y += 50
             Player.player_state = BEND
-            Player.width = 50
-            Player.height = 50
+            #Player.width = 50
+            #Player.height = 50
 
 
     def hit_check():
@@ -288,15 +289,28 @@ def Calculate_Player_Region(n, data):
 
     return min_x, min_y, max_w, max_h
 
-def Player_Transparent(player, player_img, display):
-    mask = player_img.copy()
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    mask[mask < 200] = 0
-    mask[mask >= 200] = 255
-    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-    print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
-    result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
-    cv2.imshow("result", mask)
+def Extract_Player_Region(img, mask, min_x, min_y, max_w, max_h):
+    print(min_x, min_y, max_w, max_h)
+    mask_d = mask[min_y:max_h + min_y, min_x:max_w+min_x]
+    img_d = img[min_y:max_h+min_y, min_x:max_w+min_x]
+    mask_d[mask_d < 200] = 0
+    mask_d[mask_d >= 255] = 255
+    mask_d = cv2.cvtColor(mask_d, cv2.COLOR_GRAY2BGR)
+    player_img = np.where(mask_d == 255, img_d, mask_d)
+    player_img = cv2.resize(player_img, (50, (int)(50 * max_h / max_w)))
+    mask_d = cv2.resize(mask_d, (50, (int)(50 * max_h / max_w)))
+    cv2.imshow("player_img", player_img)
+    return mask_d, player_img
+
+def Player_Transparent(player, mask_d, player_img, display):
+    #mask = player_img.copy()
+    #mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    #mask[mask < 200] = 0
+    #mask[mask >= 200] = 255
+    #mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    #print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
+    result = np.where(mask_d == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
+    #cv2.imshow("result", mask)
     display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
     return display
 
@@ -312,12 +326,24 @@ def After_Process(word):
     elif key == CV_WAITKEY_X:
         return
        
+def Opening(img):
+    kernel = np.ones((7,7),np.uint8)
+    opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+    return opening
+
 def Game_Process():
-    video_file='./outtest.avi'
+    #video_file='./outtest.avi'
     skate_board = Load_Board()
     
     # カメラのキャプチャ
-    cap = cv2.VideoCapture(video_file)
+    #cap = cv2.VideoCapture(video_file)
+    cap = cv2.VideoCapture(0)
+    cv2.waitKey(1000)
+    #背景取得処理
+    ret, background = cap.read()
+    #cv2.imshow("background", background)
+    #cv2.waitKey(0)
+    th = 30
 
     stage_0 = Make_Field(0)
     stage_1 = Make_Field(1)
@@ -325,8 +351,7 @@ def Game_Process():
     img = stage_0
     
     stride_count = 0
-    player_x = 0
-    player_y = 0
+    standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
 
     player = Player
     player.initial_coordinate()
@@ -342,7 +367,10 @@ def Game_Process():
     while True:
         current = time.time()
         if time_manage(start, current):
-            frame1 = cap.read()[1]
+            #frame1 = cap.read()[1]
+            ret, frame = cap.read()
+            cv2.imshow("cameara", frame)
+            #cv2.imshow("background", background)
             start_menu = Make_Start_Manu()
 
             key = cv2.waitKey(10)
@@ -353,6 +381,8 @@ def Game_Process():
                 if stage_select < 2:
                     stage_select += 1
             elif key == CV_WAITKEY_Z:
+                mask = subtraction(ret, frame, background, th)
+                standard_x, standard_y, standard_w, standard_h = rinkaku(mask)
                 break
             
             start_menu, stage_select = Select_Stage(start_menu, stage_select)
@@ -371,6 +401,8 @@ def Game_Process():
         player_img = np.zeros((10, 10, 3), np.uint8)
         current = time.time()
 
+
+
         key = cv2.waitKey(1)
         if key == CV_WAITKEY_W:
             player.change_state(JUMP)
@@ -380,26 +412,44 @@ def Game_Process():
             player.change_state(STAND)
 
         if time_manage(start, current):
-            frame = cap.read()[1]
-            kernel = np.ones((7,7),np.uint8)
-            opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
+            #frame = cap.read()[1]
+            ret, frame = cap.read()
 
-            label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
+            #前景抽出処理
+            mask = subtraction(ret, frame, background, th)
+
+            #kernel = np.ones((7,7),np.uint8)
+            #opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
+
+            #label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
             # オブジェクト情報を項目別に抽出
-            n = label[0] - 1
-            data = np.delete(label[2], 0, 0)
-            center = np.delete(label[3], 0, 0)
+            #n = label[0] - 1
+            #data = np.delete(label[2], 0, 0)
+            #center = np.delete(label[3], 0, 0)
 
             # オブジェクト情報を利用してラベリング結果を画面に表示
-            min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
-            if n != 0:
-                player_img = opening[min_y:max_h, min_x:max_w]
+            #min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
+            
+            #プレイヤーの切り取り,サイズ設定
+            min_x, min_y, max_w, max_h = rinkaku(mask)
+            mask_d, player_img = Extract_Player_Region(frame, mask, min_x, min_y, max_w, max_h)
+            print(player_img.shape[1], player_img.shape[0])
+            player.set_width_height(player_img.shape[1], player_img.shape[0])
+
+            #state = kenshutsu(mask, min_x, min_y, max_w, max_h)
+            state = kenshutsu(mask, standard_x, standard_y, standard_w, standard_h)
+            if state == 1:
+                player.change_state(JUMP)
+                print("state:JUMP")
+            else:
+                player.change_state(STAND)
+
+            #if n != 0:
+                #player_img = opening[min_y:max_h, min_x:max_w]
                 
-                player_img = cv2.resize(player_img, (50, (int)(50 * (max_h - min_y) / (max_w - min_x))))
                 #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
                 #result = np.where(mask==255, player_img, player_img)
-                cv2.imshow("player", player_img)
-                player.set_width_height(player_img.shape[1], player_img.shape[0])
+                #cv2.imshow("player", player_img)
                 
             stride_count += 5
             test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
@@ -430,15 +480,15 @@ def Game_Process():
                 clear_flag = False
                 break
 
-            if n != 0:    
+            #if n != 0:    
                 #人物領域外の透過処理
                 #display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
                 #print(skate_board.shape[:2])
-                player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
-                display = Player_Transparent(player, player_img, display)
+            #player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
+            display = Player_Transparent(player, mask_d, player_img, display)
 
             cv2.imshow("drawing", display)
-            cv2.imshow("skate", skate_board)
+            #cv2.imshow("skate", skate_board)
 
             if start_flag == False:
                 Start_CountDown(display)
@@ -446,7 +496,7 @@ def Game_Process():
             if clear_flag == True:
                 break
 
-            print("hit check", player.get_hit_info())
+            #print("hit check", player.get_hit_info())
             start = current
 
     if clear_flag == True:
