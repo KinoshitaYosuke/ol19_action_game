@@ -5,7 +5,7 @@
 #include <random>
 
 //ステージの大きさ
-#define F_SIZE_X 2000
+#define F_SIZE_X 2500
 #define F_SIZE_Y 300
 #define D_SIZE_X 600
 #define D_SIZE_Y 300
@@ -15,6 +15,7 @@
 #define BLOCK 1
 #define NEEDLE 2
 #define COIN 3
+#define CLEAR 100
 
 //当たり判定
 #define NO_HIT 0
@@ -132,9 +133,9 @@ void Player::set_hit_info(int info) {
 void Player::hit_check() {
 	switch (hit_info) {
 	case NO_HIT:
+		move_x = 0;
 		if (player_state == JUMP)
 			return;
-		move_x = 0;
 		move_y = -5;
 		break;
 	case HIT_Y_UP:
@@ -154,17 +155,20 @@ void Player::hit_check() {
 		break;
 	case HIT_XY_UP:
 		move_x = 5;
-		move_y = 0;
+		move_y = -5;
 		jump_counter = 0;
 		break;
 	case HIT_XY_DOWN:
 		move_x = 5;
-		move_y = 0;
-		jump_counter = 20;
+
+		if (player_state != JUMP) {
+			move_y = 0;
+			jump_counter = 20;
+		}
 		//player_state = STAND;
 		break;
 	}
-
+	return;
 }
 
 void Player::jump_process() {
@@ -215,27 +219,37 @@ int Player::get_jump_counter() {
 }
 
 //ステージ生成
-cv::Mat Make_Field() {
+cv::Mat Make_Field(int level) {
 	cv::Mat field = cv::Mat::zeros(F_SIZE_Y, F_SIZE_X, CV_8UC3);
-
-	
-
-	for (int x = 0; x <= F_SIZE_X-30; x += 30) {
+	/*
+	for (int x = 0; x <= F_SIZE_X - 60; x += 60) {
 		std::random_device rand;
 		std::mt19937 mt(rand());
 		std::uniform_int_distribution<> rand255(0, 255);
 		std::cout << x << std::endl;
-		cv::rectangle(field, cv::Point(x, 0), cv::Point(x+30, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
+		cv::rectangle(field, cv::Point(x, 0), cv::Point(x + 60, F_SIZE_Y), cv::Scalar(rand255(mt), rand255(mt), rand255(mt)), -1, CV_AA);
 	}
+	*/
+	cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(200, 200, 0), -1, CV_AA);
 
-	//cv::rectangle(field, cv::Point(0, 0), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(255, 50, 50), -1, CV_AA);
+	if (level == 0) {
+		cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+	}
+	else if (level == 1) {
+		cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(0, 0), cv::Point(1000, F_SIZE_Y - 250), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(300, 0), cv::Point(800, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(1300, F_SIZE_Y - 120), cv::Point(2000, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(1600, 0), cv::Point(2000, F_SIZE_Y - 200), cv::Scalar(0, 0, 255), -1, CV_AA);
+		cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
+		cv::rectangle(field, cv::Point(200, 350), cv::Point(300, 450), cv::Scalar(200, 0, 0), -1, CV_AA);
 
-	cv::rectangle(field, cv::Point(0, F_SIZE_Y - 50), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
-	cv::rectangle(field, cv::Point(500, F_SIZE_Y - 120), cv::Point(F_SIZE_X, F_SIZE_Y), cv::Scalar(0, 0, 255), -1, CV_AA);
 
+	}
+	else if (level == 2) {
 
-	cv::rectangle(field, cv::Point(200, 200), cv::Point(300, 300), cv::Scalar(0, 200, 0), 5, 8);
-	cv::rectangle(field, cv::Point(200, 350), cv::Point(300, 450), cv::Scalar(200, 0, 0), -1, CV_AA);
+	}
+	cv::rectangle(field, cv::Point(F_SIZE_X - D_SIZE_X, 0), cv::Point(F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), cv::Scalar(0, 255, 0), -1, CV_AA);
 
 	return field;
 }
@@ -246,11 +260,57 @@ bool time_manage(clock_t start, clock_t current) {
 }
 
 //当たり判定
+int Collision_Detection(Player player, int hit_field[60][120]) {
+	int result = NO_HIT;
+	for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
+		if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK) {
+			//std::cout << y << ", " << int((player.get_x() + player.get_w()) / 5) << std::endl;
+			result = HIT_X;
+		}
+		else if (hit_field[y][int((player.get_x() + player.get_w()) / 5 - 1)] == CLEAR) {
+			return CLEAR;
+		}
+	}
+	for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
+		if (hit_field[player.get_y() / 5][x] == BLOCK) {
+			if (result == HIT_X)
+				result = HIT_XY_UP;
+			else if (result != HIT_XY_UP)
+				result = HIT_Y_UP;
+		}
+	}
+	for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
+		if (hit_field[(player.get_y() + player.get_h()) / 5][x] == BLOCK) {
+			if (result == HIT_X)
+				result = HIT_XY_DOWN;
+			else if (result != HIT_XY_DOWN)
+				result = HIT_Y_DOWN;
+		}
+	}
+	return result;
 
+}
 
+bool Failuer_Detection(int x, int y, int height) {
+	if (x <= 0 || (y+height) >= F_SIZE_Y) return true;
+	else return false;
+}
+
+void Start_CountDown(cv::Mat Start) {
+	for (int i = 3; i > 0; i--) {
+		cv::Mat count_display = Start.clone();
+		cv::putText(count_display, std::to_string(i), cv::Point(250, 150), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(0, 255, 255), 15, CV_AA);
+		cv::imshow("drawing", count_display);
+		cv::waitKey(1000);
+	}
+}
 
 int main(int argc, char* argv[]){
-	cv::Mat img = Make_Field();
+	cv::Mat stage_0 = Make_Field(0);
+	cv::Mat stage_1 = Make_Field(1);
+	cv::Mat stage_2 = Make_Field(2);
+
+	cv::Mat img = stage_0;
 
 	int stride_count = 0;
 	int player_x = 0;
@@ -262,7 +322,63 @@ int main(int argc, char* argv[]){
 
 	bool flag = false;
 
-	//ステージ描画
+	bool clear_flag = false;
+	int stage_select = 0;
+	//スタート画面
+	while (true) {
+		clock_t current = clock();
+		if (time_manage(start, current)) {
+			cv::Mat start_menu = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+			cv::putText(start_menu, "Select Stage", cv::Point(150, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+			cv::putText(start_menu, "Level. 1", cv::Point(200, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			cv::putText(start_menu, "Level. 2", cv::Point(200, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			cv::putText(start_menu, "Level. 3", cv::Point(200, 250), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+			
+			int key = cv::waitKey(10);
+			if (key == CV_WAITKEY_W) {
+				if (stage_select > 0)
+					stage_select -= 1;
+			}
+			else if (key == CV_WAITKEY_X) {
+				if (stage_select < 2)
+					stage_select += 1;
+			}
+			else if (key == CV_WAITKEY_Z) {
+				break;
+			}
+
+			switch (stage_select) {
+			case 0:
+				cv::putText(start_menu, "Level. 1", cv::Point(200, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			case 1:
+				cv::putText(start_menu, "Level. 2", cv::Point(200, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			case 2:
+				cv::putText(start_menu, "Level. 3", cv::Point(200, 250), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(0, 0, 255), 3, CV_AA);
+				break;
+			}
+
+			cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+			cv::imshow("drawing", start_menu);
+			start = current;
+		}
+
+	}
+	std::cout << "Select Stage: Level." << stage_select << std::endl;
+
+	switch (stage_select) {
+	case 1:
+		img = stage_1;
+		break;
+	case 2:
+		img = stage_2;
+		break;
+	}
+
+	//ゲーム進行
 	while (stride_count < F_SIZE_X - (F_SIZE_Y * 2)) {
 		clock_t current = clock();
 		
@@ -280,11 +396,6 @@ int main(int argc, char* argv[]){
 		}
 		
 		if (time_manage(start, current)) {
-			//std::cout << player.get_x() << std::endl;
-			//std::cout << player.get_y() << std::endl;
-			//std::cout << player.get_w() << std::endl;
-			//std::cout << player.get_h() << std::endl;
-			//std::cout <<  player.get_hit_info()<<", " << player.get_state()<< ", " << player.get_w() << ", " << player.get_h()  << std::endl;
 
 			stride_count += 5;
 			cv::Mat test(img, cv::Rect(stride_count, 0, D_SIZE_X, D_SIZE_Y));
@@ -298,36 +409,48 @@ int main(int argc, char* argv[]){
 					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
 						hit_field[y][x] = BLOCK;
 					}
+					else if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 255, 0)) {
+						hit_field[y][x] = CLEAR;
+					}
 					else {
 						hit_field[y][x] = EMPTY;
 					}
 				}
-				std::cout << std::endl;
 			}
 
-			player.set_hit_info(NO_HIT);
-			for (int y = player.get_y() / 5; y < (player.get_y() + player.get_h()) / 5; y++) {
-				if (hit_field[y][int((player.get_x() + player.get_w()) / 5)] == BLOCK)
-					player.set_hit_info(HIT_X);
+			int check_collision = Collision_Detection(player, hit_field);
+			switch (check_collision) {
+			case NO_HIT:
+				player.set_hit_info(NO_HIT);
+				break;
+			case HIT_X:
+				player.set_hit_info(HIT_X);
+				break;
+			case HIT_Y_UP:
+				player.set_hit_info(HIT_Y_UP);
+				break;
+			case HIT_XY_UP:
+				player.set_hit_info(HIT_XY_UP);
+				break;
+			case HIT_Y_DOWN:
+				player.set_hit_info(HIT_Y_DOWN);
+				break;
+			case HIT_XY_DOWN:
+				player.set_hit_info(HIT_XY_DOWN);
+				break;
+			case CLEAR:
+				clear_flag = true;
 			}
-			for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
-				if (hit_field[player.get_y() / 5][x] == BLOCK) {
-					if (player.get_hit_info() == HIT_X)
-						player.set_hit_info(HIT_XY_UP);
-					else
-						player.set_hit_info(HIT_Y_UP);
-				}
-			}
-			for (int x = player.get_x() / 5; x < (player.get_x() + player.get_w()) / 5; x++) {
-				if (hit_field[(player.get_y() + player.get_h()) / 5][x] == BLOCK) {
-					if (player.get_hit_info() == HIT_X)
-						player.set_hit_info(HIT_XY_DOWN);
-					else
-						player.set_hit_info(HIT_Y_DOWN);
-				}
-			}
+
+			std::cout << player.get_hit_info() << std::endl;
+
 			player.hit_check();
 			player.set_coordinate();
+
+			if (Failuer_Detection(player.get_x(), player.get_y(), player.get_h())) {
+				clear_flag = false;
+				break;
+			}
 
 			cv::rectangle(display, cv::Point(player.get_x(), player.get_y()), 
 				cv::Point(player.get_x() + player.get_w(), player.get_y() + player.get_h()), cv::Scalar(255, 255, 255), -1, CV_AA);
@@ -336,28 +459,58 @@ int main(int argc, char* argv[]){
 
 
 			if (flag == false) {
-				cv::waitKey(0);
+
+				Start_CountDown(display);
 				flag = true;
 			}
-			for (int y = 0; y < int(D_SIZE_Y / 5); y++) {
-				for (int x = 0; x < int(D_SIZE_X / 5); x++) {
-					if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(0, 0, 255)) {
-						std::cout << "#";
-					}
-					else if (display.at<cv::Vec3b>(y * 5, x * 5) == cv::Vec3b(255, 255, 255))
-						std::cout << "O";
-					else {
-						std::cout << " ";
-					}
-				}
-				std::cout << std::endl;
+			if (clear_flag == true) {
+				break;
 			}
-			//cv::waitKey(5);
 			start = current;
-
 		}
-		
+	}
 
+	//クリア，失敗判定
+	if (clear_flag == true) {
+		cv::Mat clear = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+		cv::putText(clear, "Conguratulation!!", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+		cv::putText(clear, "Push W: Start Menu", cv::Point(50, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+		cv::putText(clear, "Push X: Finish", cv::Point(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+
+
+		cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+		cv::imshow("drawing", clear);
+
+		int key = cv::waitKey(0);
+		if (key == CV_WAITKEY_W) {
+			return 0;
+		}
+		else if (key == CV_WAITKEY_X) {
+			return 0;
+		}
+
+	}
+	else {
+		cv::Mat failuer = cv::Mat::zeros(D_SIZE_Y, D_SIZE_X, CV_8UC3);
+
+		cv::putText(failuer, "Stage Failuer...", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 3, CV_AA);
+
+		cv::putText(failuer, "Push W: Start Menu", cv::Point(50, 150), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+		cv::putText(failuer, "Push X: Finish", cv::Point(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1.5, cv::Scalar(255, 255, 255), 2, CV_AA);
+
+
+		cv::namedWindow("drawing", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
+		cv::imshow("drawing", failuer);
+
+		int key = cv::waitKey(0);
+		if (key == CV_WAITKEY_W) {
+			return 0;
+		}
+		else if (key == CV_WAITKEY_X) {
+			return 0;
+		}
 	}
 
 	std::cout << "Finished" << std::endl;
