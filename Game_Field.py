@@ -322,52 +322,29 @@ def After_Process(word):
     cv2.imshow("drawing", clear)
     key = cv2.waitKey(0)
     if key == CV_WAITKEY_W:
-        return
+        return True
     elif key == CV_WAITKEY_X:
-        return
+        return False
        
 def Opening(img):
     kernel = np.ones((7,7),np.uint8)
     opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
     return opening
 
-def Game_Process():
-    #video_file='./outtest.avi'
-    skate_board = Load_Board()
-    
-    # カメラのキャプチャ
-    #cap = cv2.VideoCapture(video_file)
-    cap = cv2.VideoCapture(0)
-    cv2.waitKey(1000)
-    #背景取得処理
-    ret, background = cap.read()
-    #cv2.imshow("background", background)
-    #cv2.waitKey(0)
-    th = 30
+def Display_Start_Menu(cap, back_flag):
+    if back_flag == False:
+        ret, background = cap.read()
 
     stage_0 = Make_Field(0)
     stage_1 = Make_Field(1)
     stage_2 = Make_Field(2)
-    img = stage_0
-    
-    stride_count = 0
-    standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
-
-    player = Player
-    player.initial_coordinate()
-
-    start_flag = False
-    clear_flag = False
-    stage_select = 0
-
-    #frame = cap.read()[1]
+    stage = stage_0
 
     start = time.time()
-
+    stage_select = 0
     while True:
         current = time.time()
         if time_manage(start, current):
-            #frame1 = cap.read()[1]
             ret, frame = cap.read()
             cv2.imshow("cameara", frame)
             #cv2.imshow("background", background)
@@ -381,8 +358,10 @@ def Game_Process():
                 if stage_select < 2:
                     stage_select += 1
             elif key == CV_WAITKEY_Z:
-                mask = subtraction(ret, frame, background, th)
-                standard_x, standard_y, standard_w, standard_h = rinkaku(mask)
+                if back_flag == False:
+                    th = 30
+                    mask = subtraction(ret, frame, background, th)
+                    standard_x, standard_y, standard_w, standard_h = rinkaku(mask)
                 break
             
             start_menu, stage_select = Select_Stage(start_menu, stage_select)
@@ -393,15 +372,43 @@ def Game_Process():
     print("Stage Level.", stage_select)
 
     if stage_select == 1:
-        img = stage_1
+        stage = stage_1
     elif stage_select == 2:
-        img = stage_2
+        stage = stage_2
+
+
+    if back_flag == False:
+        back_flag = True
+        return standard_x, standard_y, standard_w, standard_h, background, stage, back_flag
+    else:
+        return stage
+
+def Display_After_Menu(clear_flag):
+    if clear_flag == True:
+        continue_flag = After_Process("Conguratulation!!")
+    else:
+        continue_flag = After_Process("Stage Failuer...")
+
+    return continue_flag
+
+def Game_Process(standard_x, standard_y, standard_w, standard_h, background, stage, cap):
+    #video_file='./outtest.avi'
+    skate_board = Load_Board()
+    
+    th = 30
+
+    stride_count = 0
+    player = Player
+    player.initial_coordinate()
+
+    start_flag = False
+    clear_flag = False
+
+    start = time.time()
 
     while stride_count < F_SIZE_X - (F_SIZE_Y * 2):
         player_img = np.zeros((10, 10, 3), np.uint8)
         current = time.time()
-
-
 
         key = cv2.waitKey(1)
         if key == CV_WAITKEY_W:
@@ -452,7 +459,7 @@ def Game_Process():
                 #cv2.imshow("player", player_img)
                 
             stride_count += 5
-            test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
+            test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = test.copy()
             player.jump_process()
 
@@ -499,230 +506,24 @@ def Game_Process():
             #print("hit check", player.get_hit_info())
             start = current
 
-    if clear_flag == True:
-        After_Process("Conguratulation!!")
-        return 0
-        
-    else:
-         After_Process("Stage Failuer...")
-         return 0
-
     print("Finished")
 
-    return 0
+    return clear_flag
 
 def main():
-    """
-    video_file='./outtest.avi'
-    
-    # カメラのキャプチャ
-    cap = cv2.VideoCapture(video_file)
-
-    stage_0 = Make_Field(0)
-    stage_1 = Make_Field(1)
-    stage_2 = Make_Field(2)
-    img = stage_0
-    
-    stride_count = 0
-    player_x = 0
-    player_y = 0
-
-    
-    player = Player
-    player.initial_coordinate()
-
-    start_flag = False
-    clear_flag = False
-    stage_select = 0
-
-    #frame = cap.read()[1]
-
-    start = time.time()
-
+    cap = cv2.VideoCapture(0)
+    back_flag = False
+    standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
     while True:
-        
-        current = time.time()
-        if time_manage(start, current):
-           
-
-            start_menu = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-            cv2.putText(start_menu, "Select Stage", (150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-            cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-            cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-            key = cv2.waitKey(10)
-            if key == CV_WAITKEY_W:
-                if stage_select > 0:
-                    stage_select -= 1
-            elif key == CV_WAITKEY_X:
-                if stage_select < 2:
-                    stage_select += 1
-            elif key == CV_WAITKEY_Z:
-                break
-
-            if stage_select == 0:
-                cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-            elif stage_select == 1:
-                cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-            elif stage_select == 2:
-                cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-
-            cv2.imshow("drawing", start_menu)
-            start = current
-
-    print("Stage Level.", stage_select)
-
-    if stage_select == 1:
-        img = stage_1
-    elif stage_select == 2:
-        img = stage_2
-
-    while stride_count < F_SIZE_X - (F_SIZE_Y * 2):
-        player_img = np.zeros((10, 10, 3), np.uint8)
-        current = time.time()
-
-        key = cv2.waitKey(1)
-        if key == CV_WAITKEY_W:
-            player.change_state(JUMP)
-        elif key == CV_WAITKEY_X:
-            player.change_state(BEND)
-        elif key == CV_WAITKEY_Z:
-            player.change_state(STAND)
-
-        if time_manage(start, current):
-            size_x, size_y = 0, 0
-            frame = cap.read()[1]
-            kernel = np.ones((7,7),np.uint8)
-            opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
-
-            label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
-            # オブジェクト情報を項目別に抽出
-            n = label[0] - 1
-            data = np.delete(label[2], 0, 0)
-            center = np.delete(label[3], 0, 0)
-
-            # オブジェクト情報を利用してラベリング結果を画面に表示
-            min_x, min_y, max_w, max_h = 1000, 1000, 0, 0
-            for i in range(n):
-                if min_x > data[i][0]:
-                    min_x = data[i][0]
-                if min_y > data[i][1]:
-                    min_y = data[i][1]
-                if max_w < data[i][0] + data[i][2]:
-                    max_w = data[i][0] + data[i][2]
-                if max_h < data[i][1] + data[i][3]:
-                    max_h = data[i][1] + data[i][3]
-                #cv2.rectangle(opening, (data[i][0], data[i][1]), (data[i][0]+data[i][2], data[i][1]+data[i][3]), (0, 255, 0))
-            
-            if n != 0:
-                player_img = opening[min_y:max_h, min_x:max_w]
-                #cv2.rectangle(opening, (min_x, min_y), (max_w, max_h), (0, 0, 255))
-                size_x = 50
-                size_y = (int)(50 * (max_h - min_y) / (max_w - min_x))
-                player_img = cv2.resize(player_img, (size_x, size_y))
-                #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
-                #result = np.where(mask==255, player_img, player_img)
-                cv2.imshow("player", player_img)
-                player.set_width_height(size_x, size_y)
-                #print(player.get_w(), player.get_h())
-
-            stride_count += 5
-            test = img[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
-            display = test.copy()
-            player.jump_process()
-
-            #hit_field = [(int)(D_SIZE_Y / 5)][(int)(D_SIZE_X / 5)]
-            hit_field = [[0 for col in range((int)(D_SIZE_X / 5))] for row in range((int)(D_SIZE_Y / 5))]
-            for y in range(0, (int)(D_SIZE_Y / 5)):
-                for x in range(0, (int)(D_SIZE_X / 5)):
-                    blue, green, red = display[y * 5, x * 5, 0], display[y * 5, x * 5, 1], display[y * 5, x * 5, 2]
-                    if [blue, green, red] == [0, 0, 255]:
-                        hit_field[y][x] = BLOCK
-                    elif [blue, green, red] == [0, 255, 0]:
-                        hit_field[y][x] = CLEAR
-                    else:
-                        hit_field[y][x] = EMPTY
-
-            check_collision = Collision_Detection(player, hit_field)
-            if check_collision == NO_HIT:
-                player.set_hit_info(NO_HIT)
-            elif check_collision == HIT_X:
-                player.set_hit_info(HIT_X)
-            elif check_collision == HIT_Y_UP:
-                player.set_hit_info(HIT_Y_UP)
-            elif check_collision == HIT_XY_UP:
-                player.set_hit_info(HIT_XY_UP)
-            elif check_collision == HIT_Y_DOWN:
-                player.set_hit_info(HIT_Y_DOWN)
-            elif check_collision == HIT_XY_DOWN:
-                player.set_hit_info(HIT_XY_DOWN)
-            elif check_collision == CLEAR:
-                clear_flag = True
-
-            player.hit_check()
-            player.set_coordinate()
-
-            if Failuer_Detection(player.get_x() - player.get_w(), player.get_y(), player.get_h()):
-                clear_flag = False
-                break
-
-            if n != 0:    
-                #人物領域外の透過処理
-                mask = player_img.copy()
-                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask[mask < 200] = 0
-                mask[mask >= 200] = 255
-                mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-                print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
-                result = np.where(mask == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
-                cv2.imshow("result", mask)
-                display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
-
-            cv2.imshow("drawing", display)
-
-            if start_flag == False:
-                Start_CountDown(display)
-                start_flag = True
-            if clear_flag == True:
-                break
-
-            print("hit check", player.get_hit_info())
-            start = current
-
-    if clear_flag == True:
-        clear = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-        cv2.putText(clear, "Conguratulation!!", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-        cv2.putText(clear, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(clear, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow("drawing", clear)
-
-        key = cv2.waitKey(0)
-        if key == CV_WAITKEY_W:
-            return 0
-        elif key == CV_WAITKEY_X:
-            return 0
-    else:
-        failuer = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-        cv2.putText(failuer, "Stage Filuer...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-        cv2.putText(failuer, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(failuer, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
-        cv2.imshow("drawing", failuer)
-
-        key = cv2.waitKey(0)
-        if key == CV_WAITKEY_W:
-            return 0
-        elif key == CV_WAITKEY_X:
-            return 0
-    
-
-    print("Finished")
-
-    return 0
-    """
-    Game_Process()
+        if back_flag == False:
+            standard_x, standard_y, standard_w, standard_h, background, stage, back_flag = Display_Start_Menu(cap, back_flag)
+        else:
+            stage = Display_Start_Menu(cap, back_flag)
+        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, background, stage, cap)
+        continue_flag = Display_After_Menu(clear_flag)
+        back_flag = True
+        if continue_flag == False:
+            break
 
 if __name__ == '__main__':
     main()
