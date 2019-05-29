@@ -56,6 +56,7 @@ def Make_Check_Field(stage, y, x, h, w, color):
 
 def Make_Field():
     img = cv2.imread("./block.png")
+    needle = cv2.imread("./needle.png")
     texture = img[0:50, 0:50], img[0:50, 50:100], img[0:50, 100:150], img[50:100, 0:50], img[50:100, 50:100], img[50:100, 100:150], img[100:150, 0:50], img[100:150, 50:100], img[100:150, 100:150]
     field = np.zeros((F_SIZE_Y, F_SIZE_X, 3), np.uint8)
     cv2.rectangle(field, (0, 0), (F_SIZE_X, F_SIZE_Y), (200, 200, 0), -1)
@@ -65,13 +66,13 @@ def Make_Field():
     #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
     #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
     #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
-    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (255, 0, 0))
     field = Make_Check_Field(field, 0, 0, 1000, F_SIZE_Y - 250, (0, 0, 255))
     field = Make_Check_Field(field, 300, 0, 800, F_SIZE_Y - 200, (0, 0, 255))
     field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
     field = Make_Check_Field(field, 1600, 0, 2000, 100, (0, 0, 255))
     #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
-    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, needle)
     texture_field = Make_Texture(texture_field, 0, 0, 1000, F_SIZE_Y - 250, texture[0])
     texture_field = Make_Texture(texture_field, 300, 0, 800, F_SIZE_Y - 200, texture[0])
     texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[0])
