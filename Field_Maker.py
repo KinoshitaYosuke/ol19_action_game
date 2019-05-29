@@ -50,7 +50,7 @@ def Make_Texture(stage, y, x, h, w, texture):
     return stage
 
 def Make_Check_Field(stage, y, x, h, w, color):
-    cv2.rectangle(stage, (x, y), (x + w, y + h), color, -1)
+    cv2.rectangle(stage, (y, x), (h, w), color, -1)
     return stage
 
 
@@ -114,7 +114,7 @@ def Move_Field(stage):
 def main():
     stage,texture = Make_Field()
     #Check_Field(texture)
-    Move_Field(texture)
+    Move_Field(stage)
 
 if __name__ == '__main__':
     main()

@@ -97,7 +97,7 @@ def subtraction(ret, frame, bg,th):
     
         # フレームの取得
         #et,frame = cap.read()
-        cv2.imshow("Frame",frame)
+        #cv2.imshow("Frame",frame)
         # グレースケール変換
         #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         #ray = cv2.cvtColor(cap.read()[1], cv2.COLOR_RGB2GRAY)
@@ -127,13 +127,13 @@ def subtraction(ret, frame, bg,th):
 
         # フレームとマスク画像を表示
         
-        if ret==True:
+        #if ret==True:
             #frame = cv2.flip(frame,0)
             # write the flipped frame
             #mask=cv2.cvtColor(mask,cv2.COLOR_GRAY2BGR)
             #writer.write(mask)
-            cv2.imshow("Mask", mask)
-            cv2.imshow("Result", frame)
+            #cv2.imshow("Mask", mask)
+            #cv2.imshow("Result", frame)
 
         return mask
         #i += 1    # カウントを1増やす

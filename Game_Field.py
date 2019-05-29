@@ -62,7 +62,7 @@ class Player:
         #Player.coordinate_x = (int)(D_SIZE_X / 2) - Player.width
         #Player.coordinate_y = 250 - Player.height
         Player.coordinate_x = (int)(D_SIZE_X / 2)
-        Player.coordinate_y = 250
+        Player.coordinate_y = D_SIZE_Y - 50
         Player.jump_counter = 20
 
 
@@ -193,16 +193,16 @@ def Make_Field(level):
         #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
         #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
         #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
-        field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (255, 0, 0))
+        field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
         field = Make_Check_Field(field, 0, 0, 1000, F_SIZE_Y - 250, (0, 0, 255))
         field = Make_Check_Field(field, 300, 0, 800, F_SIZE_Y - 200, (0, 0, 255))
-        field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (255, 0, 0))
         field = Make_Check_Field(field, 1600, 0, 2000, 100, (0, 0, 255))
         #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
-        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, needle)
+        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
         texture_field = Make_Texture(texture_field, 0, 0, 1000, F_SIZE_Y - 250, texture[0])
         texture_field = Make_Texture(texture_field, 300, 0, 800, F_SIZE_Y - 200, texture[0])
-        texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, needle)
         texture_field = Make_Texture(texture_field, 1600, 0, 2000, 100, texture[0])
     
     elif level == 2:
@@ -234,10 +234,19 @@ def Collision_Detection(player, display):
                 hit_field[y][x] = EMPTY
 
     result = NO_HIT
-    for y in range((int)((player.get_y() - player.get_h()) / 5) + 1 , (int)(player.get_y() / 5) - 1):
+    print("check_region")
+    print("y: ", (int)((player.get_y() - player.get_h()) / 5) + 1, "x:", (int)(player.get_y() / 5) - 1, "w:", (int)(player.get_x() / 5))
+    print("x:", (int)((player.get_x() - player.get_w()) / 5) + 1, "w:", (int)(player.get_x() / 5) - 1, (int)((player.get_y() - player.get_h()) / 5))
+    print((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1, (int)(player.get_y() / 5))
+    print("player region")
+    print("y: ", (int)((player.get_y() - player.get_h()) / 5), "x:", (int)(player.get_y() / 5), "w:", (int)(player.get_x() / 5))
+    print("x:", (int)((player.get_x() - player.get_w()) / 5), "w:", (int)(player.get_x() / 5), (int)((player.get_y() - player.get_h()) / 5))
+    print((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5) , (int)(player.get_y() / 5))
+
+    for y in range((int)((player.get_y() - player.get_h()) / 5) + 1, (int)(player.get_y() / 5) - 1):
         #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
         if hit_field[y][(int)(player.get_x() / 5)] == BLOCK:
-            print("hit x")
+            #print("hit x")
             result = HIT_X
             break
         elif hit_field[y][(int)(player.get_x() / 5)] == CLEAR:
@@ -248,6 +257,7 @@ def Collision_Detection(player, display):
     for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
         if hit_field[(int)((player.get_y() - player.get_h()) / 5)][x] == BLOCK:
             if result == HIT_X:
+                #print("hit xy up")
                 result = HIT_XY_UP
                 break
             elif result == NO_HIT:
@@ -256,12 +266,14 @@ def Collision_Detection(player, display):
     for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
         if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
             if result == HIT_X:
+                #print("hit xy down")
                 result = HIT_XY_DOWN
                 break
             elif result == NO_HIT:
                 result = HIT_Y_DOWN
                 break
             elif result == HIT_XY_UP:
+                #print("hit xy")
                 result = HIT_XY
                 break
     return result
@@ -364,6 +376,7 @@ def Display_Start_Menu(cap, back_flag):
     check_field_1, texture_field_1 = Make_Field(1)
     check_field_2, texture_field_2 = Make_Field(2)
     check_field, texture_field = check_field_0, texture_field_0
+    stage_select = 0
 
     start = time.time()
     while True:
@@ -485,11 +498,13 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, che
             stride_count += 5
             #test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = texture_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
+            #display = check_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
             collision_dis = check_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
             player.jump_process()
 
 
             check_collision = Collision_Detection(player, collision_dis)
+            #print(check_collision)
             if check_collision == NO_HIT:
                 player.set_hit_info(NO_HIT)
             elif check_collision == HIT_X:
