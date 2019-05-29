@@ -368,6 +368,18 @@ def Opening(img):
     opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
     return opening
 
+def Drawing(display, player_img):
+    img = np.zeros((D_SIZE_Y, D_SIZE_X + 200, 3), np.uint8)
+    img[0:D_SIZE_Y, 0:D_SIZE_X] = display
+    if player_img.shape[0] * 4 > D_SIZE_Y:
+        x = (int)(D_SIZE_Y / player_img.shape[0] * 50)
+        y = D_SIZE_Y
+        img[0:y, D_SIZE_X:D_SIZE_X + x] = cv2.resize(player_img,(D_SIZE_Y, x))
+    else:
+        img[0:player_img.shape[0] * 4, D_SIZE_X:D_SIZE_X + 200]  = cv2.resize(player_img, (player_img.shape[0] * 4, player_img.shape[1] * 4))
+
+    cv2.imshow("drawing", img)
+
 def Display_Start_Menu(cap, back_flag):
     if back_flag == False:
         ret, background = cap.read()
@@ -527,7 +539,8 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
             #player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
             display = Player_Transparent(player, mask_d, player_img, display)
 
-            cv2.imshow("drawing", display)
+            Drawing(display, player_img)
+            #cv2.imshow("drawing", display)
             #cv2.imshow("skate", skate_board)
 
             if start_flag == False:
