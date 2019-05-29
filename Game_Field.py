@@ -376,7 +376,7 @@ def Drawing(display, player_img):
         y = D_SIZE_Y
         img[0:y, D_SIZE_X:D_SIZE_X + x] = cv2.resize(player_img,(D_SIZE_Y, x))
     else:
-        img[0:player_img.shape[0] * 4, D_SIZE_X:D_SIZE_X + 200]  = cv2.resize(player_img, (player_img.shape[0] * 4, player_img.shape[1] * 4))
+        img[0:player_img.shape[0] * 4, D_SIZE_X:D_SIZE_X + 200]  = cv2.resize(player_img, (player_img.shape[1] * 4, player_img.shape[0] * 4))
 
     cv2.imshow("drawing", img)
 
@@ -410,7 +410,7 @@ def Display_Start_Menu(cap, back_flag):
                 if back_flag == False:
                     th = 30
                     mask = subtraction(ret, frame, background, th)
-                    standard_x, standard_y, standard_w, standard_h = Human_Detection(frame, mask)
+                    standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h = Human_Detection(frame, mask)
                     #dst = mask[size_y:size_y + size_h, size_x:size_x * size_w]
                     #standard_x, standard_y, standard_w, standard_h = rinkaku(dst)
                 break
@@ -477,6 +477,7 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
 
             #プレイヤーの切り取り,サイズ設定
             min_x, min_y, max_w, max_h = rinkaku(mask)
+            print(":", min_x, min_y, max_w, max_h)
             mask_d, player_img = Extract_Player_Region(frame, mask, min_x, min_y, max_w, max_h)
             print(player_img.shape[1], player_img.shape[0])
             player.set_width_height(player_img.shape[1], player_img.shape[0])
@@ -570,6 +571,8 @@ def main():
         back_flag = True
         if continue_flag == False:
             break
+
+    return
 
 if __name__ == '__main__':
     main()

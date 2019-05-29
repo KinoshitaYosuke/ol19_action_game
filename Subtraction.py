@@ -80,7 +80,7 @@ def Human_Detection(img, mask):
 
     standard_x, standard_y, standard_w, standard_h = rinkaku(dst)
 
-    return standard_x, standard_y, standard_w, standard_h
+    return standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h
 
 def rinkaku(img):
     #imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
