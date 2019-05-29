@@ -398,7 +398,9 @@ def Display_Start_Menu(cap, back_flag):
                 if back_flag == False:
                     th = 30
                     mask = subtraction(ret, frame, background, th)
-                    standard_x, standard_y, standard_w, standard_h = rinkaku(mask)
+                    standard_x, standard_y, standard_w, standard_h = Human_Detection(frame, mask)
+                    #dst = mask[size_y:size_y + size_h, size_x:size_x * size_w]
+                    #standard_x, standard_y, standard_w, standard_h = rinkaku(dst)
                 break
             
             start_menu, stage_select = Select_Stage(start_menu, stage_select)
@@ -416,7 +418,7 @@ def Display_Start_Menu(cap, back_flag):
 
     if back_flag == False:
         back_flag = True
-        return standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag
+        return standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, back_flag
     else:
         return check_field, texture_field
 
@@ -428,7 +430,7 @@ def Display_After_Menu(clear_flag):
 
     return continue_flag
 
-def Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap):
+def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, cap):
     #video_file='./outtest.avi'
     skate_board = Load_Board()
     
@@ -458,22 +460,9 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, che
         if time_manage(start, current):
             #frame = cap.read()[1]
             ret, frame = cap.read()
-
             #前景抽出処理
-            mask = subtraction(ret, frame, background, th)
+            mask = subtraction(ret, frame[size_y:size_y + size_h, size_x:size_x + size_w], background[size_y:size_y + size_h, size_x:size_x + size_w], th)
 
-            #kernel = np.ones((7,7),np.uint8)
-            #opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
-
-            #label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
-            # オブジェクト情報を項目別に抽出
-            #n = label[0] - 1
-            #data = np.delete(label[2], 0, 0)
-            #center = np.delete(label[3], 0, 0)
-
-            # オブジェクト情報を利用してラベリング結果を画面に表示
-            #min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
-            
             #プレイヤーの切り取り,サイズ設定
             min_x, min_y, max_w, max_h = rinkaku(mask)
             mask_d, player_img = Extract_Player_Region(frame, mask, min_x, min_y, max_w, max_h)
@@ -560,10 +549,10 @@ def main():
     standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
     while True:
         if back_flag == False:
-            standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag = Display_Start_Menu(cap, back_flag)
+            standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, back_flag = Display_Start_Menu(cap, back_flag)
         else:
             check_field, texture_field = Display_Start_Menu(cap, back_flag)
-        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap)
+        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, cap)
         continue_flag = Display_After_Menu(clear_flag)
         back_flag = True
         if continue_flag == False:

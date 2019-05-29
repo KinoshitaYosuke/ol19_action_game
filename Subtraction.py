@@ -40,6 +40,48 @@ def main():
     #bg = cv2.cvtColor(cap.read()[1], cv2.COLOR_RGB2GRAY)
     #ret,bg=cap.read()
 
+def Human_Detection(img, mask):
+    # グレースケール変換
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # HoG特徴量 + SVMで人の識別器を作成
+    hog = cv2.HOGDescriptor()
+    hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+    hogParams = {'winStride': (8, 8), 'padding': (32, 32), 'scale': 1.05}
+
+    # 作成した識別器で人を検出
+    human, r = hog.detectMultiScale(gray, **hogParams)
+
+    size_x, size_y, size_w, size_h = 0, 0, 0, 0
+    area = 0
+    for (x, y, w, h) in human:
+        if w * h > area:
+            area = w * h
+            size_x, size_y, size_w, size_h = x, y, w, h
+
+    if size_x > 30:
+        size_x -= 30
+    else:
+        size_x = 0
+    if size_y > 30:
+        size_y -= 30
+    else:
+        size_y = 0
+    if size_x + size_w < 1280:
+        size_w += 30
+    else:
+        size_w = 1280 - size_x
+    if size_y + size_y < 720:
+        size_h += 30
+    else:
+        size_h = 720 - size_y
+
+    dst = mask[size_y:size_y + size_h, size_x:size_x + size_w]
+
+    standard_x, standard_y, standard_w, standard_h = rinkaku(dst)
+
+    return standard_x, standard_y, standard_w, standard_h
+
 def rinkaku(img):
     #imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(img, 127, 255, 0)
