@@ -3,17 +3,18 @@ import numpy as np
 
 import time
 from Subtraction import *
+from Field_Maker import *
 
 #ステージの大きさ
-F_SIZE_X = 2500
-F_SIZE_Y = 300
-D_SIZE_X = 600
-D_SIZE_Y = 300
+F_SIZE_X = 5000
+F_SIZE_Y = 720
+D_SIZE_X = 1280
+D_SIZE_Y = 720
 
 #ステージギミック
 EMPTY = 0
 BLOCK = 1
-NEEDLE = 2
+NEEDLE = -100
 COIN = 3
 CLEAR = 100
 
@@ -176,24 +177,41 @@ def Load_Board():
     return skate_board
 
 def Make_Field(level):
+    img = cv2.imread("./block.png")
+    needle = cv2.imread("./needle.png")
+    texture = img[0:50, 0:50], img[0:50, 50:100], img[0:50, 100:150], img[50:100, 0:50], img[50:100, 50:100], img[50:100, 100:150], img[100:150, 0:50], img[100:150, 50:100], img[100:150, 100:150]
     field = np.zeros((F_SIZE_Y, F_SIZE_X, 3), np.uint8)
     cv2.rectangle(field, (0, 0), (F_SIZE_X, F_SIZE_Y), (200, 200, 0), -1)
+    texture_field = field.copy()
+    
+
     if level == 0:
         cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
     elif level == 1:
-        cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
-        #cv2.rectangle(field, (800, 0), (F_SIZE_X, F_SIZE_Y - 100), (0, 0, 255), -1)
-        cv2.rectangle(field, (0, 0), (1000, F_SIZE_Y - 250), (0, 0, 255), -1)
-        cv2.rectangle(field, (300, 0), (800, F_SIZE_Y - 200), (0, 0, 255), -1)
-        cv2.rectangle(field, (1300, F_SIZE_Y - 120), (2000, F_SIZE_Y), (0, 0, 255), -1)
-        cv2.rectangle(field, (1600, 0), (2000, 100), (0, 0, 255), -1)
-        cv2.rectangle(field, (200, 350), (300, 450), (0, 0, 255), -1)
+    
+        #フィールドの作成
+        #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
+        #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
+        #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
+        field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (255, 0, 0))
+        field = Make_Check_Field(field, 0, 0, 1000, F_SIZE_Y - 250, (0, 0, 255))
+        field = Make_Check_Field(field, 300, 0, 800, F_SIZE_Y - 200, (0, 0, 255))
+        field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 1600, 0, 2000, 100, (0, 0, 255))
+        #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
+        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, needle)
+        texture_field = Make_Texture(texture_field, 0, 0, 1000, F_SIZE_Y - 250, texture[0])
+        texture_field = Make_Texture(texture_field, 300, 0, 800, F_SIZE_Y - 200, texture[0])
+        texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 1600, 0, 2000, 100, texture[0])
+    
     elif level == 2:
         i = 0
 
-    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X, 0), (F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), (0, 255, 0), -1)
+    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
+    cv2.rectangle(texture_field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
 
-    return field
+    return field, texture_field
 
 def time_manage(start, current):
     if(current-start > 50 / 1000):
@@ -210,11 +228,13 @@ def Collision_Detection(player, display):
                 hit_field[y][x] = BLOCK
             elif [blue, green, red] == [0, 255, 0]:
                 hit_field[y][x] = CLEAR
+            elif [blue, green, red] == [255, 0, 0]:
+                hit_field[y][x] = NEEDLE
             else:
                 hit_field[y][x] = EMPTY
 
     result = NO_HIT
-    for y in range((int)((player.get_y() - player.get_h()) / 5) , (int)(player.get_y() / 5)):
+    for y in range((int)((player.get_y() - player.get_h()) / 5) + 1 , (int)(player.get_y() / 5) - 1):
         #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
         if hit_field[y][(int)(player.get_x() / 5)] == BLOCK:
             print("hit x")
@@ -222,7 +242,10 @@ def Collision_Detection(player, display):
             break
         elif hit_field[y][(int)(player.get_x() / 5)] == CLEAR:
             return CLEAR
-    for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
+        elif hit_field[y][(int)(player.get_x() / 5)] == NEEDLE:
+            return NEEDLE
+        
+    for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
         if hit_field[(int)((player.get_y() - player.get_h()) / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_UP
@@ -230,7 +253,7 @@ def Collision_Detection(player, display):
             elif result == NO_HIT:
                 result = HIT_Y_UP
                 break
-    for x in range((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5)):
+    for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
         if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
             if result == HIT_X:
                 result = HIT_XY_DOWN
@@ -325,7 +348,9 @@ def After_Process(word):
         return True
     elif key == CV_WAITKEY_X:
         return False
-       
+    
+    return False
+
 def Opening(img):
     kernel = np.ones((7,7),np.uint8)
     opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
@@ -335,13 +360,12 @@ def Display_Start_Menu(cap, back_flag):
     if back_flag == False:
         ret, background = cap.read()
 
-    stage_0 = Make_Field(0)
-    stage_1 = Make_Field(1)
-    stage_2 = Make_Field(2)
-    stage = stage_0
+    check_field_0, texture_field_0 = Make_Field(0)
+    check_field_1, texture_field_1 = Make_Field(1)
+    check_field_2, texture_field_2 = Make_Field(2)
+    check_field, texture_field = check_field_0, texture_field_0
 
     start = time.time()
-    stage_select = 0
     while True:
         current = time.time()
         if time_manage(start, current):
@@ -372,16 +396,16 @@ def Display_Start_Menu(cap, back_flag):
     print("Stage Level.", stage_select)
 
     if stage_select == 1:
-        stage = stage_1
+        check_field, texture_field = check_field_1, texture_field_1
     elif stage_select == 2:
-        stage = stage_2
+        check_field, texture_field = check_field_2, texture_field_2
 
 
     if back_flag == False:
         back_flag = True
-        return standard_x, standard_y, standard_w, standard_h, background, stage, back_flag
+        return standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag
     else:
-        return stage
+        return check_field, texture_field
 
 def Display_After_Menu(clear_flag):
     if clear_flag == True:
@@ -391,7 +415,7 @@ def Display_After_Menu(clear_flag):
 
     return continue_flag
 
-def Game_Process(standard_x, standard_y, standard_w, standard_h, background, stage, cap):
+def Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap):
     #video_file='./outtest.avi'
     skate_board = Load_Board()
     
@@ -459,12 +483,13 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, sta
                 #cv2.imshow("player", player_img)
                 
             stride_count += 5
-            test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
-            display = test.copy()
+            #test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
+            display = texture_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
+            collision_dis = check_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
             player.jump_process()
 
 
-            check_collision = Collision_Detection(player, display)
+            check_collision = Collision_Detection(player, collision_dis)
             if check_collision == NO_HIT:
                 player.set_hit_info(NO_HIT)
             elif check_collision == HIT_X:
@@ -479,6 +504,10 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, sta
                 player.set_hit_info(HIT_XY_DOWN)
             elif check_collision == CLEAR:
                 clear_flag = True
+                break
+            elif check_collision == NEEDLE:
+                clear_flag = False
+                break
 
             player.hit_check()
             player.set_coordinate()
@@ -516,10 +545,10 @@ def main():
     standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
     while True:
         if back_flag == False:
-            standard_x, standard_y, standard_w, standard_h, background, stage, back_flag = Display_Start_Menu(cap, back_flag)
+            standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag = Display_Start_Menu(cap, back_flag)
         else:
-            stage = Display_Start_Menu(cap, back_flag)
-        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, background, stage, cap)
+            check_field, texture_field = Display_Start_Menu(cap, back_flag)
+        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap)
         continue_flag = Display_After_Menu(clear_flag)
         back_flag = True
         if continue_flag == False:
