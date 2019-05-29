@@ -6,10 +6,10 @@ import time
 from Subtraction import *
 
 #ステージの大きさ
-F_SIZE_X = 2500
-F_SIZE_Y = 300
-D_SIZE_X = 600
-D_SIZE_Y = 300
+F_SIZE_X = 5000
+F_SIZE_Y = 720
+D_SIZE_X = 1280
+D_SIZE_Y = 720
 
 #ステージギミック
 EMPTY = 0
@@ -41,19 +41,46 @@ CV_WAITKEY_ESC = 27
 CV_WAITKEY_SPACE = 32
 CV_WAITKEY_TAB = 9
 
+def Make_Texture(stage, y, x, h, w, texture):
+    print(y, x, h, w)
+    for i in range(y, h, 50):
+        for j in range(x, w, 50):
+            print(i, j)
+            stage[j:j+50, i:i+50] = texture
+    return stage
+
+def Make_Check_Field(stage, y, x, h, w, color):
+    cv2.rectangle(stage, (x, y), (x + w, y + h), color, -1)
+    return stage
+
+
 def Make_Field():
+    img = cv2.imread("./block.png")
+    texture = img[0:50, 0:50], img[0:50, 50:100], img[0:50, 100:150], img[50:100, 0:50], img[50:100, 50:100], img[50:100, 100:150], img[100:150, 0:50], img[100:150, 50:100], img[100:150, 100:150]
     field = np.zeros((F_SIZE_Y, F_SIZE_X, 3), np.uint8)
     cv2.rectangle(field, (0, 0), (F_SIZE_X, F_SIZE_Y), (200, 200, 0), -1)
-    cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
-    cv2.rectangle(field, (0, 0), (1000, F_SIZE_Y - 250), (0, 0, 255), -1)
-    cv2.rectangle(field, (300, 0), (800, F_SIZE_Y - 200), (0, 0, 255), -1)
-    cv2.rectangle(field, (1300, F_SIZE_Y - 120), (2000, F_SIZE_Y), (0, 0, 255), -1)
-    cv2.rectangle(field, (1600, 0), (2000, 100), (0, 0, 255), -1)
-    cv2.rectangle(field, (200, 350), (300, 450), (0, 0, 255), -1)
+    texture_field = field.copy()
+    
+    #フィールドの作成
+    #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
+    #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
+    #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
+    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 0, 0, 1000, F_SIZE_Y - 250, (0, 0, 255))
+    field = Make_Check_Field(field, 300, 0, 800, F_SIZE_Y - 200, (0, 0, 255))
+    field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 1600, 0, 2000, 100, (0, 0, 255))
+    #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
+    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 0, 0, 1000, F_SIZE_Y - 250, texture[0])
+    texture_field = Make_Texture(texture_field, 300, 0, 800, F_SIZE_Y - 200, texture[0])
+    texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 1600, 0, 2000, 100, texture[0])
+    
+    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
+    cv2.rectangle(texture_field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
 
-    cv2.rectangle(field, (F_SIZE_X - D_SIZE_X, 0), (F_SIZE_X - D_SIZE_X + 30, F_SIZE_Y), (0, 255, 0), -1)
-
-    return field
+    return field, texture_field
 
 def Check_Field(stage):
     cv2.imshow("stage", stage)
@@ -70,7 +97,7 @@ def Move_Field(stage):
     stride_count = 0
     
     start = time.time()
-    while stride_count < F_SIZE_X - (F_SIZE_Y * 2):
+    while stride_count < F_SIZE_X - D_SIZE_X:
         current = time.time()
 
         if time_manage(start, current):
@@ -84,9 +111,9 @@ def Move_Field(stage):
     return 0
 
 def main():
-    stage = Make_Field()
-    Check_Field(stage)
-    Move_Field(stage)
+    stage,texture = Make_Field()
+    #Check_Field(texture)
+    Move_Field(texture)
 
 if __name__ == '__main__':
     main()
