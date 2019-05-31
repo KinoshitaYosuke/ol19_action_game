@@ -102,10 +102,10 @@ class Player:
             Player.move_x = 0
             if Player.player_state == JUMP:
                 return
-            Player.move_y = -10
+            Player.move_y = -15
         elif Player.hit_info == HIT_Y_UP:
             Player.move_x = 0
-            Player.move_y = -10
+            Player.move_y = -15
             Player.jump_counter = 0
         elif Player.hit_info == HIT_Y_DOWN:
             if Player.player_state == JUMP:
@@ -117,7 +117,7 @@ class Player:
             Player.move_x = 10
         elif Player.hit_info == HIT_XY_UP:
             Player.move_x = 10
-            Player.move_y = -10
+            Player.move_y = -15
             Player.jump_counter = 0
         elif Player.hit_info == HIT_XY_DOWN:
             Player.move_x = 10
@@ -129,13 +129,13 @@ class Player:
                 Player.move_y = 0
                 Player.jump_counter = 10
                 Player.move_x = 10
-                Player.move_y = -10
+                Player.move_y = -15
                 Player.jump_counter = 0
 
     def jump_process():
         if Player.player_state == JUMP:
             if Player.jump_counter > 0:
-                Player.move_y = 10
+                Player.move_y = 15
                 Player.jump_counter -= 1
             else:
                 Player.move_y = 0
@@ -171,10 +171,11 @@ class Player:
 def Load_Board():
     img = cv2.imread("./skateboard.png")
     #白領域をマスク黒化
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 200, 255, 0)
+    img[thresh == 255] = [200, 200, 0]
 
-    #マスク黒領域を背景とする
     return img
-    return skate_board
 
 def Make_Field(level):
     img = cv2.imread("./block.png")
@@ -222,10 +223,10 @@ def time_manage(start, current):
         return False
 
 def Collision_Detection(player, display):
-    hit_field = [[0 for col in range((int)(D_SIZE_X / 5))] for row in range((int)(D_SIZE_Y / 5))]
-    for y in range(0, (int)(D_SIZE_Y / 5)):
-        for x in range(0, (int)(D_SIZE_X / 5)):
-            blue, green, red = display[y * 5, x * 5, 0], display[y * 5, x * 5, 1], display[y * 5, x * 5, 2]
+    hit_field = [[0 for col in range((int)(D_SIZE_X / 10))] for row in range((int)(D_SIZE_Y / 10))]
+    for y in range(0, (int)(D_SIZE_Y / 10)):
+        for x in range(0, (int)(D_SIZE_X / 10)):
+            blue, green, red = display[y * 10, x * 10, 0], display[y * 10, x * 10, 1], display[y * 10, x * 10, 2]
             if [blue, green, red] == [0, 0, 255]:
                 hit_field[y][x] = BLOCK
             elif [blue, green, red] == [0, 255, 0]:
@@ -236,28 +237,28 @@ def Collision_Detection(player, display):
                 hit_field[y][x] = EMPTY
 
     result = NO_HIT
-    print("check_region")
-    print("y: ", (int)((player.get_y() - player.get_h()) / 5) + 1, "x:", (int)(player.get_y() / 5) - 1, "w:", (int)(player.get_x() / 5))
-    print("x:", (int)((player.get_x() - player.get_w()) / 5) + 1, "w:", (int)(player.get_x() / 5) - 1, (int)((player.get_y() - player.get_h()) / 5))
-    print((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1, (int)(player.get_y() / 5))
-    print("player region")
-    print("y: ", (int)((player.get_y() - player.get_h()) / 5), "x:", (int)(player.get_y() / 5), "w:", (int)(player.get_x() / 5))
-    print("x:", (int)((player.get_x() - player.get_w()) / 5), "w:", (int)(player.get_x() / 5), (int)((player.get_y() - player.get_h()) / 5))
-    print((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5) , (int)(player.get_y() / 5))
+    #print("check_region")
+    #print("y: ", (int)((player.get_y() - player.get_h()) / 5) + 1, "x:", (int)(player.get_y() / 5) - 1, "w:", (int)(player.get_x() / 5))
+    #print("x:", (int)((player.get_x() - player.get_w()) / 5) + 1, "w:", (int)(player.get_x() / 5) - 1, (int)((player.get_y() - player.get_h()) / 5))
+    #print((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1, (int)(player.get_y() / 5))
+    #print("player region")
+    #print("y: ", (int)((player.get_y() - player.get_h()) / 5), "x:", (int)(player.get_y() / 5), "w:", (int)(player.get_x() / 5))
+    #print("x:", (int)((player.get_x() - player.get_w()) / 5), "w:", (int)(player.get_x() / 5), (int)((player.get_y() - player.get_h()) / 5))
+    #print((int)((player.get_x() - player.get_w()) / 5), (int)(player.get_x() / 5) , (int)(player.get_y() / 5))
 
-    for y in range((int)((player.get_y() - player.get_h()) / 5) + 1, (int)(player.get_y() / 5) - 1):
+    for y in range((int)((player.get_y() - player.get_h()) / 10) + 1, (int)(player.get_y() / 10) - 1):
         #print("1: ", hit_field[y][(int)((player.get_x() + player.get_w()) / 5)])
-        if hit_field[y][(int)(player.get_x() / 5)] == BLOCK:
+        if hit_field[y][(int)(player.get_x() / 10)] == BLOCK:
             #print("hit x")
             result = HIT_X
             break
-        elif hit_field[y][(int)(player.get_x() / 5)] == CLEAR:
+        elif hit_field[y][(int)(player.get_x() / 10)] == CLEAR:
             return CLEAR
-        elif hit_field[y][(int)(player.get_x() / 5)] == NEEDLE:
+        elif hit_field[y][(int)(player.get_x() / 10)] == NEEDLE:
             return NEEDLE
         
-    for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
-        if hit_field[(int)((player.get_y() - player.get_h()) / 5)][x] == BLOCK:
+    for x in range((int)((player.get_x() - player.get_w()) / 10) + 1, (int)(player.get_x() / 10) - 1):
+        if hit_field[(int)((player.get_y() - player.get_h()) / 10)][x] == BLOCK:
             if result == HIT_X:
                 #print("hit xy up")
                 result = HIT_XY_UP
@@ -265,8 +266,8 @@ def Collision_Detection(player, display):
             elif result == NO_HIT:
                 result = HIT_Y_UP
                 break
-    for x in range((int)((player.get_x() - player.get_w()) / 5) + 1, (int)(player.get_x() / 5) - 1):
-        if hit_field[(int)(player.get_y() / 5)][x] == BLOCK:
+    for x in range((int)((player.get_x() - player.get_w()) / 10) + 1, (int)(player.get_x() / 10) - 1):
+        if hit_field[(int)(player.get_y() / 10)][x] == BLOCK:
             if result == HIT_X:
                 #print("hit xy down")
                 result = HIT_XY_DOWN
@@ -339,15 +340,27 @@ def Extract_Player_Region(img, mask, min_x, min_y, max_w, max_h):
     #cv2.imshow("player_img", player_img)
     return mask_d, player_img
 
-def Player_Transparent(player, mask_d, player_img, display):
+def Player_Transparent_2(player, mask_d, player_img, display, skate_board):
+    img = player_img.copy()
+    mask = mask_d.copy()
+    
+    img = player_img.copy()
+    mask = mask_d.copy()
+    
+    back = np.zeros_like(img)
+    img[mask == 0] = [200, 200, 0]
+    img[img.shape[0] - 10:img.shape[0], 0:50] = skate_board
 
-    #mask = player_img.copy()
-    #mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    #mask[mask < 200] = 0
-    #mask[mask >= 200] = 255
-    #mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-    #print(player.get_x() - player.get_w(), player.get_y() - player.get_h())
-    result = np.where(mask_d == 255, player_img, display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()])
+    display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = img
+    return display
+
+def Player_Transparent(player, mask_d, player_img, display, skate_board):
+    dst_m = cv2.resize(mask_d, ((int)(mask_d.shape[0] / 2), (int)(mask_d.shape[1] / 2)))
+    dst_p = cv2.resize(player_img, ((int)(player_img.shape[0] / 2), (int)(player_img.shape[1] / 2)))
+    dst_d = cv2.resize(display, ((int)(display.shape[0] / 2), (int)(display.shape[1] / 2)))
+
+    result = np.where(dst_m == 255, dst_p, dst_d[(int)((player.get_y() - player.get_h()) / 2):(int)(player.get_y() / 2), (int)((player.get_x() - player.get_w()) / 2):(int)(player.get_x() / 2)])
+    result = cv2.resize(result, (2 * result.shape[0], 2 * result.shape[1]))
     #cv2.imshow("result", mask)
     display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
     return display
@@ -469,19 +482,6 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, che
             #前景抽出処理
             mask = subtraction(ret, frame, background, th)
 
-            #kernel = np.ones((7,7),np.uint8)
-            #opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
-
-            #label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
-            # オブジェクト情報を項目別に抽出
-            #n = label[0] - 1
-            #data = np.delete(label[2], 0, 0)
-            #center = np.delete(label[3], 0, 0)
-
-            # オブジェクト情報を利用してラベリング結果を画面に表示
-            #min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
-            
-            #プレイヤーの切り取り,サイズ設定
             min_x, min_y, max_w, max_h = rinkaku(mask)
             mask_d, player_img = Extract_Player_Region(frame, mask, min_x, min_y, max_w, max_h)
             print(player_img.shape[1], player_img.shape[0])
@@ -495,13 +495,6 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, che
             else:
                 player.change_state(STAND)
 
-            #if n != 0:
-                #player_img = opening[min_y:max_h, min_x:max_w]
-                
-                #mask = cv2.cvtColor(player_img, cv2.COLOR_BGR2GRAY)
-                #result = np.where(mask==255, player_img, player_img)
-                #cv2.imshow("player", player_img)
-                
             stride_count += 10
             #test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = texture_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
@@ -545,7 +538,7 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, background, che
                 #display[player.get_y() - player.get_h():player.get_y(), player.get_x() - player.get_w():player.get_x()] = result
                 #print(skate_board.shape[:2])
             #player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
-            display = Player_Transparent(player, mask_d, player_img, display)
+            display = Player_Transparent_2(player, mask_d, player_img, display, skate_board)
 
             cv2.imshow("drawing", display)
             #cv2.imshow("skate", skate_board)
