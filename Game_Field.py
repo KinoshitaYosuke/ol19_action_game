@@ -191,7 +191,6 @@ def Make_Field(level):
         texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
         
     elif level == 1:
-    
         #フィールドの作成
         #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
         #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
@@ -209,7 +208,33 @@ def Make_Field(level):
         texture_field = Make_Texture(texture_field, 1600, 0, 2000, 100, texture[0])
     
     elif level == 2:
-        i = 0
+        #フィールドの作成
+        #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
+        #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
+        #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
+        field = Make_Check_Field(field, 0, F_SIZE_Y - 50, 2350, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 2350, F_SIZE_Y - 50, 2450, F_SIZE_Y, (255, 0, 0))
+        field = Make_Check_Field(field, 2450, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 1300, 550, 1500, 600, (0, 0, 255))
+        field = Make_Check_Field(field, 1450, 450, 1650, 500, (0, 0, 255))
+        field = Make_Check_Field(field, 1600, 350, 2650, 400, (0, 0, 255))
+        field = Make_Check_Field(field, 2650, 250, 2700, 400, (0, 0, 255))
+        field = Make_Check_Field(field, 1800, F_SIZE_Y - 150, 2000, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 1900, F_SIZE_Y - 200, 2000, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 2200, 400, 2250, 600, (0, 0, 255))
+        field = Make_Check_Field(field, 2600, 0, 3000, 100, (0, 0, 255))
+        #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
+        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, 2350, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 2350, F_SIZE_Y - 50, 2450, F_SIZE_Y, needle)
+        texture_field = Make_Texture(texture_field, 2450, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 1300, 550, 1500, 600, texture[1])
+        texture_field = Make_Texture(texture_field, 1450, 450, 1650, 500, texture[1])
+        texture_field = Make_Texture(texture_field, 1600, 350, 2650, 400, texture[1])
+        texture_field = Make_Texture(texture_field, 2650, 250, 2700, 400, texture[1])
+        texture_field = Make_Texture(texture_field, 1800, F_SIZE_Y - 150, 2000, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 1900, F_SIZE_Y - 200, 2000, F_SIZE_Y, texture[0])
+        texture_field = Make_Texture(texture_field, 2200, 400, 2250, 600, texture[1])
+        texture_field = Make_Texture(texture_field, 2600, 0, 3000, 100, texture[0])
 
     cv2.rectangle(field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
     cv2.rectangle(texture_field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
@@ -290,27 +315,29 @@ def Failuer_Detection(x, y, height):
 def Start_CountDown(Start):
     for i in range(0, 3):
         count_display = Start.copy()
-        cv2.putText(count_display, str(3 - i), (250, 150), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 255), 15, cv2.LINE_AA)
+        cv2.putText(count_display, str(3 - i), (500, 300), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 255), 15, cv2.LINE_AA)
         cv2.imshow("drawing", count_display)
         cv2.waitKey(1000)
 
-def Make_Start_Manu():
-    start_menu = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-    cv2.putText(start_menu, "Select Stage", (150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-    cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-
+def Make_Start_Manu(start_menu):
+    #start_menu = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
+    cv2.putText(start_menu, "Select Stage", (400, 200), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10, cv2.LINE_AA)
+    cv2.putText(start_menu, "Level. 1", (550, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5, cv2.LINE_AA)
+    cv2.putText(start_menu, "Level. 2", (550, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5, cv2.LINE_AA)
+    cv2.putText(start_menu, "Level. 3", (550, 500), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5, cv2.LINE_AA)
+    #cv2.putText(start_menu, "Level. X", (550, 600), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5, cv2.LINE_AA)
     return start_menu
 
 def Select_Stage(start_menu, stage_select):
     if stage_select == 0:
-        cv2.putText(start_menu, "Level. 1", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(start_menu, "Level. 1", (550, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5, cv2.LINE_AA)
     elif stage_select == 1:
-        cv2.putText(start_menu, "Level. 2", (200, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(start_menu, "Level. 2", (550, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5, cv2.LINE_AA)
     elif stage_select == 2:
-        cv2.putText(start_menu, "Level. 3", (200, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
-
+        cv2.putText(start_menu, "Level. 3", (550, 500), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5, cv2.LINE_AA)
+    elif stage_select == 3:
+        cv2.putText(start_menu, "Level. X", (550, 600), cv2.FONT_HERSHEY_SIMPLEX, 2, (100, 0, 100), 5, cv2.LINE_AA)
+    
     return start_menu, stage_select
 
 def Calculate_Player_Region(n, data):
@@ -367,15 +394,16 @@ def Player_Transparent(player, mask_d, player_img, display, skate_board):
 
 def After_Process(word):
     clear = np.zeros((D_SIZE_Y, D_SIZE_X, 3), np.uint8)
-    cv2.putText(clear, word, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
-    cv2.putText(clear, "Push W: Start Menu", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.putText(clear, "Push X: Finish", (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2, cv2.LINE_AA)
+    cv2.putText(clear, word, (300, 200), cv2.FONT_HERSHEY_SIMPLEX, 3, (255, 255, 255), 10, cv2.LINE_AA)
+    cv2.putText(clear, "Push W: Start Menu", (400, 300), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5, cv2.LINE_AA)
+    cv2.putText(clear, "Push X: Finish", (400, 400), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 5, cv2.LINE_AA)
     cv2.imshow("drawing", clear)
-    key = cv2.waitKey(0)
-    if key == CV_WAITKEY_W:
-        return True
-    elif key == CV_WAITKEY_X:
-        return False
+    while True:
+        key = cv2.waitKey(0)
+        if key == CV_WAITKEY_W:
+            return True
+        elif key == CV_WAITKEY_X:
+            return False
     
     return False
 
@@ -394,6 +422,9 @@ def Display_Start_Menu(cap, back_flag):
     check_field_1, texture_field_1 = Make_Field(1)
     check_field_2, texture_field_2 = Make_Field(2)
     check_field, texture_field = check_field_0, texture_field_0
+    
+    show_stage = texture_field_0[0:D_SIZE_Y, 1000:D_SIZE_X+1000], texture_field_1[0:D_SIZE_Y, 1000:D_SIZE_X+1000], texture_field_2[0:D_SIZE_Y, 1000:D_SIZE_X+1000], texture_field_3[0:D_SIZE_Y, 1000:D_SIZE_X+1000]
+    
     stage_select = 0
 
     start = time.time()
@@ -404,7 +435,7 @@ def Display_Start_Menu(cap, back_flag):
             frame = frame[0:frame.shape[0], 150:550]
             cv2.imshow("cameara", frame)
             #cv2.imshow("background", background)
-            start_menu = Make_Start_Manu()
+            start_menu = Make_Start_Manu(show_stage[stage_select])
 
             key = cv2.waitKey(10)
             if key == CV_WAITKEY_W:

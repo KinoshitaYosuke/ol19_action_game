@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 
@@ -53,7 +52,6 @@ def Make_Check_Field(stage, y, x, h, w, color):
     cv2.rectangle(stage, (y, x), (h, w), color, -1)
     return stage
 
-
 def Make_Field():
     img = cv2.imread("./block.png")
     needle = cv2.imread("./needle.png")
@@ -66,17 +64,29 @@ def Make_Field():
     #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
     #色(0, 0, 255)：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
     #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 色)
-    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (255, 0, 0))
-    field = Make_Check_Field(field, 0, 0, 1000, F_SIZE_Y - 250, (0, 0, 255))
-    field = Make_Check_Field(field, 300, 0, 800, F_SIZE_Y - 200, (0, 0, 255))
-    field = Make_Check_Field(field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
-    field = Make_Check_Field(field, 1600, 0, 2000, 100, (0, 0, 255))
+    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, 2350, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 2350, F_SIZE_Y - 50, 2450, F_SIZE_Y, (255, 0, 0))
+    field = Make_Check_Field(field, 2450, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 1300, 550, 1500, 600, (0, 0, 255))
+    field = Make_Check_Field(field, 1450, 450, 1650, 500, (0, 0, 255))
+    field = Make_Check_Field(field, 1600, 350, 2650, 400, (0, 0, 255))
+    field = Make_Check_Field(field, 2650, 250, 2700, 400, (0, 0, 255))
+    field = Make_Check_Field(field, 1800, F_SIZE_Y - 150, 2000, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 1900, F_SIZE_Y - 200, 2000, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 2200, 400, 2250, 600, (0, 0, 255))
+    field = Make_Check_Field(field, 2600, 0, 3000, 100, (0, 0, 255))
     #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
-    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, needle)
-    texture_field = Make_Texture(texture_field, 0, 0, 1000, F_SIZE_Y - 250, texture[0])
-    texture_field = Make_Texture(texture_field, 300, 0, 800, F_SIZE_Y - 200, texture[0])
-    texture_field = Make_Texture(texture_field, 1300, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[0])
-    texture_field = Make_Texture(texture_field, 1600, 0, 2000, 100, texture[0])
+    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, 2350, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 2350, F_SIZE_Y - 50, 2450, F_SIZE_Y, needle)
+    texture_field = Make_Texture(texture_field, 2450, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 1300, 550, 1500, 600, texture[1])
+    texture_field = Make_Texture(texture_field, 1450, 450, 1650, 500, texture[1])
+    texture_field = Make_Texture(texture_field, 1600, 350, 2650, 400, texture[1])
+    texture_field = Make_Texture(texture_field, 2650, 250, 2700, 400, texture[1])
+    texture_field = Make_Texture(texture_field, 1800, F_SIZE_Y - 150, 2000, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 1900, F_SIZE_Y - 200, 2000, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 2200, 400, 2250, 600, texture[1])
+    texture_field = Make_Texture(texture_field, 2600, 0, 3000, 100, texture[0])
     
     cv2.rectangle(field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
     cv2.rectangle(texture_field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
@@ -94,7 +104,6 @@ def time_manage(start, current):
         return False
 
 def Move_Field(stage):
-    
     stride_count = 0
     
     start = time.time()
@@ -107,13 +116,13 @@ def Move_Field(stage):
             cv2.imshow("drawing", display)
             cv2.waitKey(10)
             start = current
-            stride_count += 5
+            stride_count += 10
 
     return 0
 
 def main():
     stage,texture = Make_Field()
-    Check_Field(texture)
+    Check_Field(stage)
     Move_Field(texture)
 
 if __name__ == '__main__':
