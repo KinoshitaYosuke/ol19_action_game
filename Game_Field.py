@@ -7,9 +7,9 @@ from Field_Maker import *
 
 #ステージの大きさ
 F_SIZE_X = 5000
-F_SIZE_Y = 720
-D_SIZE_X = 1280
-D_SIZE_Y = 720
+F_SIZE_Y = 750
+D_SIZE_X = 1300
+D_SIZE_Y = 750
 
 #ステージギミック
 EMPTY = 0
@@ -63,7 +63,7 @@ class Player:
         #Player.coordinate_y = 250 - Player.height
         Player.coordinate_x = (int)(D_SIZE_X / 2)
         Player.coordinate_y = D_SIZE_Y - 50
-        Player.jump_counter = 20
+        Player.jump_counter = 10
 
 
     def set_coordinate():
@@ -102,44 +102,44 @@ class Player:
             Player.move_x = 0
             if Player.player_state == JUMP:
                 return
-            Player.move_y = -5
+            Player.move_y = -10
         elif Player.hit_info == HIT_Y_UP:
             Player.move_x = 0
-            Player.move_y = -5
+            Player.move_y = -10
             Player.jump_counter = 0
         elif Player.hit_info == HIT_Y_DOWN:
             if Player.player_state == JUMP:
                 return
             Player.move_x = 0
             Player.move_y = 0
-            Player.jump_counter = 20
+            Player.jump_counter = 10
         elif Player.hit_info == HIT_X:
-            Player.move_x = 5
+            Player.move_x = 10
         elif Player.hit_info == HIT_XY_UP:
-            Player.move_x = 5
-            Player.move_y = -5
+            Player.move_x = 10
+            Player.move_y = -10
             Player.jump_counter = 0
         elif Player.hit_info == HIT_XY_DOWN:
-            Player.move_x = 5
+            Player.move_x = 10
             if Player.player_state != JUMP:
                 Player.move_y = 0
-                Player.jump_counter = 20
+                Player.jump_counter = 10
         elif Player.hit_info == HIT_XY:
             if Player.player_state != JUMP:
                 Player.move_y = 0
-                Player.jump_counter = 20
-                Player.move_x = 5
-                Player.move_y = -5
+                Player.jump_counter = 10
+                Player.move_x = 10
+                Player.move_y = -10
                 Player.jump_counter = 0
 
     def jump_process():
         if Player.player_state == JUMP:
             if Player.jump_counter > 0:
-                Player.move_y = 5
+                Player.move_y = 10
                 Player.jump_counter -= 1
             else:
                 Player.move_y = 0
-                Player.jump_counter = 20
+                Player.jump_counter = 10
                 Player.player_state = STAND
 
     def set_hit_info(info):
@@ -186,7 +186,9 @@ def Make_Field(level):
     
 
     if level == 0:
-        cv2.rectangle(field, (0, F_SIZE_Y - 50), (F_SIZE_X, F_SIZE_Y), (0, 0, 255), -1)
+        field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+        
     elif level == 1:
     
         #フィールドの作成
@@ -331,13 +333,14 @@ def Extract_Player_Region(img, mask, min_x, min_y, max_w, max_h):
     mask_d[mask_d < 200] = 0
     mask_d[mask_d >= 255] = 255
     mask_d = cv2.cvtColor(mask_d, cv2.COLOR_GRAY2BGR)
-    player_img = np.where(mask_d == 255, img_d, mask_d)
-    player_img = cv2.resize(player_img, (50, (int)(50 * max_h / max_w)))
+    #player_img = np.where(mask_d == 255, img_d, mask_d)
+    player_img = cv2.resize(img_d, (50, (int)(50 * max_h / max_w)))
     mask_d = cv2.resize(mask_d, (50, (int)(50 * max_h / max_w)))
-    cv2.imshow("player_img", player_img)
+    #cv2.imshow("player_img", player_img)
     return mask_d, player_img
 
 def Player_Transparent(player, mask_d, player_img, display):
+
     #mask = player_img.copy()
     #mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     #mask[mask < 200] = 0
@@ -368,21 +371,11 @@ def Opening(img):
     opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
     return opening
 
-def Drawing(display, player_img):
-    img = np.zeros((D_SIZE_Y, D_SIZE_X + 200, 3), np.uint8)
-    img[0:D_SIZE_Y, 0:D_SIZE_X] = display
-    if player_img.shape[0] * 4 > D_SIZE_Y:
-        x = (int)(D_SIZE_Y / player_img.shape[0] * 50)
-        y = D_SIZE_Y
-        img[0:y, D_SIZE_X:D_SIZE_X + x] = cv2.resize(player_img,(D_SIZE_Y, x))
-    else:
-        img[0:player_img.shape[0] * 4, D_SIZE_X:D_SIZE_X + 200]  = cv2.resize(player_img, (player_img.shape[1] * 4, player_img.shape[0] * 4))
-
-    cv2.imshow("drawing", img)
-
 def Display_Start_Menu(cap, back_flag):
     if back_flag == False:
         ret, background = cap.read()
+        print(background.shape[:])
+        background = background[0:background.shape[0], 150:550]
 
     check_field_0, texture_field_0 = Make_Field(0)
     check_field_1, texture_field_1 = Make_Field(1)
@@ -395,6 +388,7 @@ def Display_Start_Menu(cap, back_flag):
         current = time.time()
         if time_manage(start, current):
             ret, frame = cap.read()
+            frame = frame[0:frame.shape[0], 150:550]
             cv2.imshow("cameara", frame)
             #cv2.imshow("background", background)
             start_menu = Make_Start_Manu()
@@ -410,9 +404,7 @@ def Display_Start_Menu(cap, back_flag):
                 if back_flag == False:
                     th = 30
                     mask = subtraction(ret, frame, background, th)
-                    standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h = Human_Detection(frame, mask)
-                    #dst = mask[size_y:size_y + size_h, size_x:size_x * size_w]
-                    #standard_x, standard_y, standard_w, standard_h = rinkaku(dst)
+                    standard_x, standard_y, standard_w, standard_h = rinkaku(mask)
                 break
             
             start_menu, stage_select = Select_Stage(start_menu, stage_select)
@@ -430,7 +422,7 @@ def Display_Start_Menu(cap, back_flag):
 
     if back_flag == False:
         back_flag = True
-        return standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, back_flag
+        return standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag
     else:
         return check_field, texture_field
 
@@ -442,7 +434,7 @@ def Display_After_Menu(clear_flag):
 
     return continue_flag
 
-def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, cap):
+def Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap):
     #video_file='./outtest.avi'
     skate_board = Load_Board()
     
@@ -470,14 +462,27 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
             player.change_state(STAND)
 
         if time_manage(start, current):
+            print("fps:", current -start)
             #frame = cap.read()[1]
             ret, frame = cap.read()
+            frame = frame[0:frame.shape[0], 150:550]
             #前景抽出処理
-            mask = subtraction(ret, frame[size_y:size_y + size_h, size_x:size_x + size_w], background[size_y:size_y + size_h, size_x:size_x + size_w], th)
+            mask = subtraction(ret, frame, background, th)
 
+            #kernel = np.ones((7,7),np.uint8)
+            #opening = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel)
+
+            #label = cv2.connectedComponentsWithStats(cv2.cvtColor(opening, cv2.COLOR_BGR2GRAY))
+            # オブジェクト情報を項目別に抽出
+            #n = label[0] - 1
+            #data = np.delete(label[2], 0, 0)
+            #center = np.delete(label[3], 0, 0)
+
+            # オブジェクト情報を利用してラベリング結果を画面に表示
+            #min_x, min_y, max_w, max_h = Calculate_Player_Region(n, data)            
+            
             #プレイヤーの切り取り,サイズ設定
             min_x, min_y, max_w, max_h = rinkaku(mask)
-            print(":", min_x, min_y, max_w, max_h)
             mask_d, player_img = Extract_Player_Region(frame, mask, min_x, min_y, max_w, max_h)
             print(player_img.shape[1], player_img.shape[0])
             player.set_width_height(player_img.shape[1], player_img.shape[0])
@@ -497,7 +502,7 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
                 #result = np.where(mask==255, player_img, player_img)
                 #cv2.imshow("player", player_img)
                 
-            stride_count += 5
+            stride_count += 10
             #test = stage[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count]
             display = texture_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
             #display = check_field[0:D_SIZE_Y, stride_count:D_SIZE_X + stride_count].copy()
@@ -519,6 +524,8 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
                 player.set_hit_info(HIT_Y_DOWN)
             elif check_collision == HIT_XY_DOWN:
                 player.set_hit_info(HIT_XY_DOWN)
+            elif check_collision == HIT_XY:
+                player.set_hit_info(HIT_XY)
             elif check_collision == CLEAR:
                 clear_flag = True
                 break
@@ -540,8 +547,7 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
             #player_img[player_img.shape[0] - 10:player_img.shape[0], 0:50] = skate_board
             display = Player_Transparent(player, mask_d, player_img, display)
 
-            Drawing(display, player_img)
-            #cv2.imshow("drawing", display)
+            cv2.imshow("drawing", display)
             #cv2.imshow("skate", skate_board)
 
             if start_flag == False:
@@ -558,21 +564,20 @@ def Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y,
     return clear_flag
 
 def main():
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
+    cv2.waitKey(100)
     back_flag = False
     standard_x, standard_y, standard_w, standard_h = 0, 0, 0, 0
     while True:
         if back_flag == False:
-            standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, back_flag = Display_Start_Menu(cap, back_flag)
+            standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, back_flag = Display_Start_Menu(cap, back_flag)
         else:
             check_field, texture_field = Display_Start_Menu(cap, back_flag)
-        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, size_x, size_y, size_w, size_h, background, check_field, texture_field, cap)
+        clear_flag = Game_Process(standard_x, standard_y, standard_w, standard_h, background, check_field, texture_field, cap)
         continue_flag = Display_After_Menu(clear_flag)
         back_flag = True
         if continue_flag == False:
             break
-
-    return
 
 if __name__ == '__main__':
     main()

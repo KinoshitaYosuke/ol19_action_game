@@ -7,9 +7,9 @@ from Subtraction import *
 
 #ステージの大きさ
 F_SIZE_X = 5000
-F_SIZE_Y = 720
-D_SIZE_X = 1280
-D_SIZE_Y = 720
+F_SIZE_Y = 750
+D_SIZE_X = 1300
+D_SIZE_Y = 750
 
 #ステージギミック
 EMPTY = 0
