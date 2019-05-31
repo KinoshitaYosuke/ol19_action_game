@@ -188,7 +188,19 @@ def Make_Field(level):
 
     if level == 0:
         field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
-        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+        field = Make_Check_Field(field, 1000, F_SIZE_Y - 100, 2000, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 1500, F_SIZE_Y - 150, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 2000, F_SIZE_Y - 250, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 2500, F_SIZE_Y - 350, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+        field = Make_Check_Field(field, 3000, 0, F_SIZE_X, F_SIZE_Y - 500, (0, 0, 255))
+        field = Make_Check_Field(field, 3500, 0, F_SIZE_X, F_SIZE_Y - 450, (0, 0, 255))
+        texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[1])
+        texture_field = Make_Texture(texture_field, 1000, F_SIZE_Y - 100, 2000, F_SIZE_Y, texture[1])
+        texture_field = Make_Texture(texture_field, 1500, F_SIZE_Y - 150, F_SIZE_X, F_SIZE_Y, texture[1])
+        texture_field = Make_Texture(texture_field, 2000, F_SIZE_Y - 250, F_SIZE_X, F_SIZE_Y, texture[1])
+        texture_field = Make_Texture(texture_field, 2500, F_SIZE_Y - 350, F_SIZE_X, F_SIZE_Y, texture[1])
+        texture_field = Make_Texture(texture_field, 3000, 0, F_SIZE_X, F_SIZE_Y - 500, texture[1])
+        texture_field = Make_Texture(texture_field, 3500, 0, F_SIZE_X, F_SIZE_Y - 450, texture[1])
         
     elif level == 1:
         #フィールドの作成
