@@ -59,7 +59,7 @@ def Make_Field():
     field = np.zeros((F_SIZE_Y, F_SIZE_X, 3), np.uint8)
     cv2.rectangle(field, (0, 0), (F_SIZE_X, F_SIZE_Y), (200, 200, 0), -1)
     texture_field = field.copy()
-    
+    """
     #フィールドの作成
     #注意：幅200，高さ300など，描画サイズは50の倍数になるようにすること，
     #色texture[2]：壁，色(255, 0, 0)：トゲ(現時点で未実装)，色(0, 255, 0)：ゴール
@@ -122,6 +122,35 @@ def Make_Field():
     texture_field = Make_Texture(texture_field, 3250, F_SIZE_Y - 350, 3400, F_SIZE_Y - 50, texture[7])
     texture_field = Make_Texture(texture_field, 3300, F_SIZE_Y - 400, 3400, F_SIZE_Y - 50, texture[7])
     texture_field = Make_Texture(texture_field, 3350, F_SIZE_Y - 450, 3450, F_SIZE_Y - 50, texture[7])
+    """
+    field = Make_Check_Field(field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, (0, 0, 255))
+    field = Make_Check_Field(field, 1000, 550, 1000 + 500, 550 + 150, (0, 0, 255))
+    field = Make_Check_Field(field, 1575, 550, 1575 + 200, 550 + 150, (0, 0, 255))
+    field = Make_Check_Field(field, 2300, 550, 2300 + 300, 550 + 150, (0, 0, 255))
+    field = Make_Check_Field(field, 2600, 400, 2600 + 300, 400 + 300, (0, 0, 255))
+    field = Make_Check_Field(field, 2900, 250, 2900 + 300, 250 + 450, (0, 0, 255))
+
+    #トゲ
+    field = Make_Check_Field(field, 1512, 0, 1512 + 50, 250, (255, 0, 0))
+    field = Make_Check_Field(field, 1575, 0, 1575+ 500, 400, (255, 0, 0))
+    field = Make_Check_Field(field, 1500, 650, 1500 + 100, 650 + 50, (255, 0, 0))
+    field = Make_Check_Field(field, 3200, 650, 3200 + 500, 650 + 50, (255, 0, 0))
+
+    #Make_Check_Field(描画する変数, x座標始点, y座標始点, 高さ, 幅, 貼るテクスチャ)
+
+    #ブロック
+    texture_field = Make_Texture(texture_field, 0, F_SIZE_Y - 50, F_SIZE_X, F_SIZE_Y, texture[0])
+    texture_field = Make_Texture(texture_field, 1000, 550, 1000 + 500, 550 + 150, texture[0])
+    texture_field = Make_Texture(texture_field, 1575, 550, 1575 + 200, 550 + 150, texture[0])
+    texture_field = Make_Texture(texture_field, 2300, 550, 2300 + 300, 550 + 150, texture[0])
+    texture_field = Make_Texture(texture_field, 2600, 400, 2600 + 300, 400 + 300, texture[0])
+    texture_field = Make_Texture(texture_field, 2900, 250, 2900 + 300, 250 + 450, texture[0])
+
+    #トゲ
+    texture_field = Make_Texture(texture_field, 1512, 0, 1512 + 50, 250, needle)
+    texture_field = Make_Texture(texture_field, 1575, 0, 1575+ 500, 400, needle)
+    texture_field = Make_Texture(texture_field, 1500, 650, 1500 + 100, 650 + 50, needle)
+    texture_field = Make_Texture(texture_field, 3200, 650, 3200 + 500, 650 + 50, needle)
 
     cv2.rectangle(field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
     cv2.rectangle(texture_field, (F_SIZE_X - D_SIZE_X - 30, 0), (F_SIZE_X - D_SIZE_X, F_SIZE_Y), (0, 255, 0), -1)
@@ -157,8 +186,8 @@ def Move_Field(stage):
 
 def main():
     stage,texture = Make_Field()
-    Check_Field(texture)
-    #Move_Field(stage)
+    #Check_Field(stage)
+    Move_Field(texture)
 
 if __name__ == '__main__':
     main()
